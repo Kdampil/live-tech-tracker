@@ -1048,10 +1048,23 @@
                 const filterDateEl = document.getElementById('filter-date');
                 const selectedDate = filterDateEl ? filterDateEl.value : new Date().toLocaleDateString('en-CA');
                 
-                queueData = (data.queue || []).filter(ticket => {
+                let filtered = (data.queue || []).filter(ticket => {
                     const ticketDate = ticket.date || new Date(ticket.timestamp).toLocaleDateString('en-CA');
                     return ticketDate === selectedDate;
                 });
+
+                // Smart Fallback: If current selected date has 0 tickets, but database has tickets, auto-select the date of the active/latest tickets
+                if (filtered.length === 0 && data.queue && data.queue.length > 0) {
+                    const latestTicket = data.queue.find(t => t.status === 'called' || t.status === 'waiting') || data.queue[data.queue.length - 1];
+                    const latestDate = latestTicket.date || new Date(latestTicket.timestamp).toLocaleDateString('en-CA');
+                    if (filterDateEl) filterDateEl.value = latestDate;
+                    filtered = data.queue.filter(ticket => {
+                        const ticketDate = ticket.date || new Date(ticket.timestamp).toLocaleDateString('en-CA');
+                        return ticketDate === latestDate;
+                    });
+                }
+
+                queueData = filtered;
                 
                 if (data.location && data.location.active) {
                     if (!locationActive && !watchId) {
