@@ -4,7 +4,8 @@
   "description": "Simple queue and live location tracking app",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "seed": "node seed.js"
   },
   "dependencies": {
     "express": "^4.19.2",
