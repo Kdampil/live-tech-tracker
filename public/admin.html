@@ -932,7 +932,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('filter-date').value = new Date().toLocaleDateString('en-CA');
             if (passcode) {
-                verifyAccess();
+                verifyAccess(true);
             }
         });
 
@@ -940,7 +940,8 @@
             const inputVal = document.getElementById('passcode-input').value.trim();
             if (inputVal) {
                 passcode = inputVal;
-                verifyAccess();
+                document.getElementById('login-error').classList.add('hidden');
+                verifyAccess(false);
             }
         }
 
@@ -957,14 +958,19 @@
             clearInterval(updateInterval);
             document.getElementById('admin-view').classList.add('hidden');
             document.getElementById('passcode-view').classList.remove('hidden');
+            document.getElementById('login-error').classList.add('hidden');
         }
 
-        async function verifyAccess() {
+        async function verifyAccess(isInitialLoad = false) {
             try {
                 const response = await fetch(`/api/admin/queue?passcode=${encodeURIComponent(passcode)}`);
                 if (response.status === 401) {
                     localStorage.removeItem('admin_passcode');
-                    document.getElementById('login-error').classList.remove('hidden');
+                    if (!isInitialLoad) {
+                        document.getElementById('login-error').classList.remove('hidden');
+                    } else {
+                        document.getElementById('login-error').classList.add('hidden');
+                    }
                     document.getElementById('passcode-view').classList.remove('hidden');
                     document.getElementById('admin-view').classList.add('hidden');
                     return;
