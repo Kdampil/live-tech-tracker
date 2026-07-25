@@ -305,8 +305,11 @@
         let map = null;
         let providerMarker = null;
         let customerMarker = null;
-        let routePolyline = null;
         let pollInterval = null;
+        
+        let customerLat = null;
+        let customerLng = null;
+        let locationRequested = false;
 
         // Initialize state automatically with no prerequisite info required
         window.addEventListener('DOMContentLoaded', () => {
@@ -317,6 +320,18 @@
             updateStatus();
             // ponytail: simple setInterval polling handles updates with zero overhead/dependencies
             pollInterval = setInterval(updateStatus, 3000);
+        }
+
+        function getDistanceKm(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radius of the earth in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
         }
 
         async function updateStatus() {
@@ -373,24 +388,27 @@
                     estimateTextEl.innerText = 'Your tech Wally is coming!';
                     positionEl.style.fontSize = '1rem';
 
-                    // Fetch driving route and ETA duration from open routing API (OSRM)
-                    if (data.location && data.location.lat && data.location.lng && data.ticket.destLat && data.ticket.destLng) {
-                        try {
-                            const routeRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${data.location.lng},${data.location.lat};${data.ticket.destLng},${data.ticket.destLat}?overview=full&geometries=geojson`);
-                            if (routeRes.ok) {
-                                const routeData = await routeRes.json();
-                                if (routeData.routes && routeData.routes[0]) {
-                                    const durationSecs = routeData.routes[0].duration;
-                                    const etaMins = Math.round(durationSecs / 60);
-                                    estimateTextEl.innerText = `Your tech Wally is coming! ETA: ${etaMins} mins`;
-                                    
-                                    // Save route line path to draw on map
-                                    data.location.routeGeometry = routeData.routes[0].geometry;
-                                }
-                            }
-                        } catch (err) {
-                            console.error('OSRM route fetch failed:', err);
-                        }
+                    // Ask for customer permission to access device location for dynamic ETA tracking
+                    if (!locationRequested && navigator.geolocation) {
+                        locationRequested = true;
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => {
+                                customerLat = pos.coords.latitude;
+                                customerLng = pos.coords.longitude;
+                                updateStatus(); // instantly trigger update with coordinates
+                            },
+                            (err) => {
+                                console.log('Location access denied or error:', err);
+                            },
+                            { enableHighAccuracy: true }
+                        );
+                    }
+
+                    // Calculate ETA if both technician location and customer location are available
+                    if (data.location && data.location.lat && data.location.lng && customerLat && customerLng) {
+                        const distanceKm = getDistanceKm(data.location.lat, data.location.lng, customerLat, customerLng);
+                        const etaMins = Math.max(1, Math.round(distanceKm * 1.5 + 2)); // Estimated city speed factor + buffer
+                        estimateTextEl.innerText = `Your tech Wally is coming! ETA: ${etaMins} mins`;
                     }
                 } else if (data.ticket.status === 'done') {
                     statusTextEl.innerText = 'Completed';
@@ -412,7 +430,7 @@
                 const mapSection = document.getElementById('map-section');
                 if (data.location && data.location.lat && data.location.lng) {
                     mapSection.style.display = 'flex';
-                    updateMap(data.location.lat, data.location.lng, data.ticket.destLat, data.ticket.destLng, data.location.routeGeometry);
+                    updateMap(data.location.lat, data.location.lng, customerLat, customerLng);
                 } else {
                     mapSection.style.display = 'none';
                     if (map) {
@@ -420,7 +438,6 @@
                         map = null;
                         providerMarker = null;
                         customerMarker = null;
-                        routePolyline = null;
                     }
                 }
 
@@ -429,7 +446,7 @@
             }
         }
 
-        function updateMap(lat, lng, destLat, destLng, routeGeometry) {
+        function updateMap(lat, lng, destLat, destLng) {
             if (!map) {
                 // Initialize map
                 map = L.map('map').setView([lat, lng], 15);
@@ -511,36 +528,14 @@
                 } else {
                     customerMarker.setLatLng(new L.LatLng(destLat, destLng));
                 }
+
+                // Auto-fit bounds to display both points clearly
+                const bounds = L.latLngBounds([lat, lng], [destLat, destLng]);
+                map.fitBounds(bounds, { padding: [50, 50] });
             } else {
                 if (customerMarker) {
                     map.removeLayer(customerMarker);
                     customerMarker = null;
-                }
-            }
-
-            // Handle Route Polyline path
-            if (routeGeometry) {
-                if (routePolyline) {
-                    map.removeLayer(routePolyline);
-                }
-                routePolyline = L.geoJSON(routeGeometry, {
-                    style: {
-                        color: '#38bdf8',
-                        weight: 4,
-                        opacity: 0.8,
-                        dashArray: '5, 10'
-                    }
-                }).addTo(map);
-
-                // Auto-fit bounds to display both points clearly
-                if (destLat && destLng) {
-                    const bounds = L.latLngBounds([lat, lng], [destLat, destLng]);
-                    map.fitBounds(bounds, { padding: [50, 50] });
-                }
-            } else {
-                if (routePolyline) {
-                    map.removeLayer(routePolyline);
-                    routePolyline = null;
                 }
                 map.panTo(new L.LatLng(lat, lng));
             }

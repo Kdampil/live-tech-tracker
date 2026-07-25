@@ -639,7 +639,6 @@
             <div class="flex-row">
                 <input type="text" id="new-customer-name" placeholder="Customer Name (e.g. John Doe)" onkeydown="if(event.key === 'Enter') addCustomer()"/>
                 <input type="tel" id="new-customer-phone" placeholder="Phone (e.g. +1234567890)" onkeydown="if(event.key === 'Enter') addCustomer()"/>
-                <input type="text" id="new-customer-address" placeholder="Service Address (e.g. 123 Main St, New York)" onkeydown="if(event.key === 'Enter') addCustomer()" style="flex: 2; min-width: 250px;"/>
                 <button class="secondary" onclick="addCustomer()">Add & Generate Link</button>
             </div>
         </div>
@@ -886,7 +885,6 @@
                             <div style="display: flex; flex-direction: column; gap: 4px;">
                                 <input type="text" class="inline-edit-input" value="${escapeHtml(ticket.name)}" placeholder="Name" onchange="updateCustomerDetails('${ticket.id}', this.value, null)" onkeydown="if(event.key === 'Enter') this.blur()"/>
                                 <input type="tel" class="inline-edit-input phone-input" value="${escapeHtml(ticket.phone || '')}" placeholder="No Phone" onchange="updateCustomerDetails('${ticket.id}', null, this.value)" onkeydown="if(event.key === 'Enter') this.blur()"/>
-                                <input type="text" class="inline-edit-input" style="font-size: 0.78rem; opacity: 0.85;" value="${escapeHtml(ticket.address || '')}" placeholder="No Address" onchange="updateCustomerAddress('${ticket.id}', this.value)" onkeydown="if(event.key === 'Enter') this.blur()"/>
                             </div>
                         </td>
                         <td data-label="Status"><span class="${statusBadgeClass}">${displayStatus}</span></td>
@@ -958,71 +956,24 @@
             }
         }
 
-        async function geocodeAddress(addressStr) {
-            if (!addressStr) return { lat: null, lng: null };
-            try {
-                // ponytail: Nominatim search geocoding API is free, fast, and does not require keys
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addressStr)}&format=json&limit=1`);
-                if (!res.ok) return { lat: null, lng: null };
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    return { lat: Number(data[0].lat), lng: Number(data[0].lon) };
-                }
-            } catch (err) {
-                console.error('Geocoding error:', err);
-            }
-            return { lat: null, lng: null };
-        }
-
-        async function updateCustomerAddress(id, address) {
-            try {
-                let destLat = null, destLng = null;
-                if (address.trim()) {
-                    const coords = await geocodeAddress(address);
-                    destLat = coords.lat;
-                    destLng = coords.lng;
-                }
-                const response = await fetch(`/api/admin/update?passcode=${encodeURIComponent(passcode)}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, address, destLat, destLng })
-                });
-                if (!response.ok) throw new Error('Failed to update address');
-                loadData();
-            } catch (err) {
-                console.error(err);
-                alert('Error updating customer address');
-            }
-        }
-
         async function addCustomer() {
             const input = document.getElementById('new-customer-name');
             const phoneInput = document.getElementById('new-customer-phone');
-            const addressInput = document.getElementById('new-customer-address');
             const dateInput = document.getElementById('filter-date');
             
             const name = input.value.trim() || 'Customer';
             const phone = phoneInput.value.trim();
-            const address = addressInput.value.trim();
             const date = dateInput.value;
 
             try {
-                let destLat = null, destLng = null;
-                if (address) {
-                    const coords = await geocodeAddress(address);
-                    destLat = coords.lat;
-                    destLng = coords.lng;
-                }
-
                 const response = await fetch(`/api/admin/add?passcode=${encodeURIComponent(passcode)}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, phone, address, destLat, destLng, date })
+                    body: JSON.stringify({ name, phone, date })
                 });
                 if (!response.ok) throw new Error('Failed to add');
                 input.value = '';
                 phoneInput.value = '';
-                addressInput.value = '';
                 loadData();
             } catch (err) {
                 console.error(err);
