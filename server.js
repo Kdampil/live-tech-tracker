@@ -91,6 +91,13 @@ function requireAdmin(req, res, next) {
 }
 
 // Customer Endpoints
+app.get('/api/passcode-check', (req, res) => {
+  res.json({
+    length: PASSCODE.length,
+    startsWith: PASSCODE.substring(0, 3),
+    rawLength: process.env.PASSCODE ? process.env.PASSCODE.length : null
+  });
+});
 app.get('/api/status', (req, res) => {
   const rawQuery = (req.query.ticket || req.query.query || '').trim();
   const query = rawQuery.toLowerCase();
