@@ -779,11 +779,11 @@
     <div id="passcode-view" class="container passcode-view">
         <h1>Admin Login</h1>
         <p class="subtitle" style="margin-bottom: 20px;">Enter administrative passcode to manage queue</p>
-        <div class="card no-ticket-form">
-            <input type="password" id="passcode-input" placeholder="Passcode" onkeydown="if(event.key === 'Enter') login()" />
-            <button onclick="login()">Access Dashboard</button>
+        <form class="card no-ticket-form" onsubmit="event.preventDefault(); login();">
+            <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="current-password" />
+            <button type="submit" style="touch-action: manipulation;">Access Dashboard</button>
             <p id="login-error" style="color: var(--accent-danger); font-size: 0.85rem; margin-top: 5px;" class="hidden">Invalid Passcode</p>
-        </div>
+        </form>
     </div>
 
     <!-- Admin Main View -->
