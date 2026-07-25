@@ -79,14 +79,14 @@ loadState().then(() => {
   console.log("Database state initialized successfully.");
 });
 
-// Admin passcode middleware
+// Admin passcode middleware (case-insensitive & whitespace tolerant)
 function requireAdmin(req, res, next) {
-  const passcode = (req.query.passcode || (req.body && req.body.passcode) || req.headers['x-passcode'] || '').trim();
+  const passcode = (req.query.passcode || (req.body && req.body.passcode) || req.headers['x-passcode'] || '').trim().toLowerCase();
   const validPasscodes = [
     PASSCODE,
     'Kit120688',
     'admin123'
-  ].map(p => (p || '').trim()).filter(Boolean);
+  ].map(p => (p || '').trim().toLowerCase()).filter(Boolean);
 
   if (!validPasscodes.includes(passcode)) {
     return res.status(401).json({ error: 'Unauthorized: invalid passcode' });
