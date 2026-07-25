@@ -965,6 +965,7 @@
             try {
                 const response = await fetch(`/api/admin/queue?passcode=${encodeURIComponent(passcode)}`);
                 if (response.status === 401) {
+                    passcode = '';
                     localStorage.removeItem('admin_passcode');
                     if (!isInitialLoad) {
                         document.getElementById('login-error').classList.remove('hidden');

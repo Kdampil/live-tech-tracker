@@ -81,7 +81,7 @@ loadState().then(() => {
 
 // Admin passcode middleware
 function requireAdmin(req, res, next) {
-  const passcode = (req.query.passcode || req.headers['x-passcode'] || '').trim();
+  const passcode = (req.query.passcode || (req.body && req.body.passcode) || req.headers['x-passcode'] || '').trim();
   if (passcode !== PASSCODE) {
     return res.status(401).json({ error: 'Unauthorized: invalid passcode' });
   }
