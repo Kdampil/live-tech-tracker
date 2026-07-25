@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Admin Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(15, 23, 42, 0.7);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --panel-border-glow: rgba(56, 189, 248, 0.2);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-primary: #3b82f6;
+            --accent-cyan: #38bdf8;
+            --accent-indigo: #6366f1;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --border-radius-container: 16px;
+            --border-radius-card: 12px;
+            --backdrop-blur: blur(20px) saturate(180%);
+            --shadow-card: 0 12px 32px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 20% 10%, rgba(56, 189, 248, 0.07) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.07) 0%, transparent 40%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+            letter-spacing: -0.015em;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1050px;
+            background: var(--panel-bg);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--border-radius-container);
+            padding: 32px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 2.1rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .passcode-view {
+            text-align: center;
+            padding: 40px 20px;
+            max-width: 400px;
+            margin: auto;
+        }
+
+        .card {
+            border-radius: var(--border-radius-card);
+            padding: 24px;
+            margin-bottom: 24px;
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid var(--panel-border);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: border-color 0.25s ease, transform 0.25s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            letter-spacing: -0.01em;
+        }
+
+        /* Forms & Buttons */
+        .flex-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.95rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        button:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--panel-border);
+            box-shadow: none;
+        }
+
+        button.secondary:hover {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+
+        button.danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            box-shadow: none;
+        }
+
+        button.danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.5);
+            transform: translateY(-1px);
+        }
+
+        /* Dashboard Overview Grid */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .stat-value {
+            font-size: 2.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* Location Card styling */
+        .location-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .location-status {
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-dot.active {
+            background: var(--accent-success);
+            box-shadow: 0 0 10px var(--accent-success);
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        .status-dot.inactive {
+            background: var(--accent-danger);
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 0.4; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* Table & Lists */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--panel-border);
+            white-space: nowrap;
+        }
+
+        th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            background: rgba(15, 23, 42, 0.4);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Pill Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid transparent;
+        }
+
+        .badge-waiting { 
+            background: rgba(245, 158, 11, 0.12); 
+            color: #fbbf24; 
+            border-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.1);
+        }
+        .badge-called { 
+            background: rgba(56, 189, 248, 0.12); 
+            color: #38bdf8; 
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+        }
+        .badge-done { 
+            background: rgba(16, 185, 129, 0.12); 
+            color: #34d399; 
+            border-color: rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.1);
+        }
+        .badge-cancelled { 
+            background: rgba(239, 68, 68, 0.12); 
+            color: #f87171; 
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            border: 1px solid var(--panel-border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 0;
+            user-select: none;
+        }
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        .btn-action:focus-visible {
+            outline: 2px solid var(--accent-cyan);
+            outline-offset: 1px;
+        }
+        .btn-action.success {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: #34d399;
+        }
+        .btn-action.success:hover {
+            background: rgba(16, 185, 129, 0.3);
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+        .btn-action.info {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+        }
+        .btn-action.info:hover {
+            background: rgba(56, 189, 248, 0.3);
+            border-color: rgba(56, 189, 248, 0.5);
+        }
+        .btn-action.danger {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+        .btn-action.danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+        .btn-action.secondary {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--panel-border);
+            color: var(--text-primary);
+        }
+        .btn-action.secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-icon-sm {
+            width: 24px;
+            height: 24px;
+            font-size: 0.72rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+            border: 1px solid var(--panel-border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 0;
+            user-select: none;
+        }
+        .btn-icon-sm:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        .btn-icon-sm:focus-visible {
+            outline: 2px solid var(--accent-cyan);
+            outline-offset: 1px;
+        }
+
+        .btn-action-text {
+            padding: 5px 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--panel-border);
+            color: var(--text-primary);
+            text-decoration: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .btn-action-text:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        .btn-action-text.info {
+            background: rgba(56, 189, 248, 0.12);
+            border-color: rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+        }
+        .btn-action-text.info:hover {
+            background: rgba(56, 189, 248, 0.25);
+            border-color: rgba(56, 189, 248, 0.5);
+            color: #7dd3fc;
+        }
+        .btn-action-text.secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--panel-border);
+            color: var(--text-primary);
+        }
+        .btn-action-text.secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .copy-input-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            max-width: 250px;
+        }
+
+        .copy-url {
+            font-size: 0.8rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--panel-border);
+            border-radius: 4px;
+            padding: 6px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            user-select: all;
+            flex: 1;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 4px; /* Reduced gap to fit all buttons on one row */
+            flex-wrap: nowrap;
+        }
+
+        .share-cell {
+            display: flex;
+            gap: 4px; /* Reduced gap to fit all buttons on one row */
+            flex-wrap: nowrap;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Keyboard Focus Indicator */
+        button:focus-visible, input:focus-visible, a:focus-visible {
+            outline: 2px solid var(--text-secondary);
+            outline-offset: 2px;
+        }
+
+        /* Row Highlight */
+        .queue-row {
+            transition: background-color 0.2s ease;
+        }
+        .queue-row:hover {
+            background-color: rgba(255, 255, 255, 0.01);
+        }
+
+        /* Inline edit inputs styling */
+        .inline-edit-input {
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 4px 8px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 130px; /* Reduced from 150px to make name columns tighter */
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .inline-edit-input:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--panel-border);
+        }
+        .inline-edit-input:focus {
+            background: var(--bg-color);
+            border-color: var(--text-secondary);
+            cursor: text;
+            outline: none !important;
+        }
+        .inline-edit-input.phone-input {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Mobile Card View styling */
+        @media (max-width: 767px) {
+            table, thead, tbody, th, td, tr { 
+                display: block; 
+            }
+            thead { 
+                display: none; 
+            }
+            .queue-row {
+                margin-bottom: 16px;
+                border: 1px solid var(--panel-border);
+                border-radius: 8px;
+                padding: 16px;
+                background: #18181b;
+            }
+            td {
+                border: none;
+                padding: 8px 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid var(--panel-border);
+                white-space: normal; /* Allow text/buttons to wrap inside card cells on mobile */
+            }
+            td:last-child {
+                border-bottom: none;
+                padding-top: 12px;
+            }
+            td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: var(--text-secondary);
+                font-size: 0.8rem;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .actions-cell, .share-cell {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Passcode Authenticator View -->
+    <div id="passcode-view" class="container passcode-view">
+        <h1>Admin Login</h1>
+        <p class="subtitle" style="margin-bottom: 20px;">Enter administrative passcode to manage queue</p>
+        <div class="card no-ticket-form">
+            <input type="password" id="passcode-input" placeholder="Passcode" onkeydown="if(event.key === 'Enter') login()" />
+            <button onclick="login()">Access Dashboard</button>
+            <p id="login-error" style="color: var(--accent-danger); font-size: 0.85rem; margin-top: 5px;" class="hidden">Invalid Passcode</p>
+        </div>
+    </div>
+
+    <!-- Admin Main View -->
+    <div id="admin-view" class="container hidden">
+        <div class="header">
+            <div>
+                <h1>Dashboard</h1>
+                <p class="subtitle" style="margin-bottom: 0;">Queue & Location Control Center</p>
+            </div>
+            <button class="secondary" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="grid-3">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-total-waiting">0</div>
+                <div class="stat-label">Waiting In Line</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-total-today">0</div>
+                <div class="stat-label">Total Tickets Today</div>
+            </div>
+        </div>
+
+        <!-- Controls Card -->
+        <div class="card">
+            <div class="card-title">Add Customer Manually</div>
+            <div class="flex-row">
+                <input type="text" id="new-customer-name" placeholder="Customer Name (e.g. John Doe)" onkeydown="if(event.key === 'Enter') addCustomer()"/>
+                <input type="tel" id="new-customer-phone" placeholder="Phone Number (e.g. +1234567890)" onkeydown="if(event.key === 'Enter') addCustomer()"/>
+                <button class="secondary" onclick="addCustomer()">Add & Generate Link</button>
+            </div>
+        </div>
+
+        <!-- Location Card -->
+        <div class="card">
+            <div class="card-title">Live Location Stream</div>
+            <div class="location-switch">
+                <div class="location-status">
+                    <span id="loc-status-dot" class="status-dot inactive"></span>
+                    <span id="loc-status-text">Location Sharing is Offline</span>
+                </div>
+                <button id="loc-toggle-btn" class="secondary" onclick="toggleLocation()">Start Location</button>
+            </div>
+        </div>
+
+        <!-- Queue List Card -->
+        <div class="card">
+            <div class="card-title">
+                <span>Customer Queue</span>
+                <input type="date" id="filter-date" style="max-width:180px; padding:6px 12px; background:rgba(0,0,0,0.4); font-size:0.9rem;" onchange="loadData()" />
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 70px; text-align: center;">Order</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Share Link</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queue-table-body">
+                        <!-- Populated by JavaScript -->
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-secondary);">No customers in queue</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Dangerous Actions Card (Isolated) -->
+        <div class="card" style="border-color: rgba(248, 113, 113, 0.15); background: rgba(248, 113, 113, 0.01); margin-top: 30px;">
+            <div class="card-title" style="color: var(--accent-danger);">System Administration (Danger Zone)</div>
+            <div class="flex-row">
+                <button class="secondary danger" onclick="confirmReset()">Reset & Clear Entire Queue</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let passcode = new URLSearchParams(window.location.search).get('passcode') || localStorage.getItem('admin_passcode') || '';
+        let queueData = [];
+        let locationActive = false;
+        let watchId = null;
+        let updateInterval = null;
+        let trackingTicketId = null;
+        let currentLat = null;
+        let currentLng = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Set default date input to local today (YYYY-MM-DD)
+            document.getElementById('filter-date').value = new Date().toLocaleDateString('en-CA');
+            if (passcode) {
+                verifyAccess();
+            }
+        });
+
+        function login() {
+            const inputVal = document.getElementById('passcode-input').value.trim();
+            if (inputVal) {
+                passcode = inputVal;
+                verifyAccess();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('admin_passcode');
+            // Remove passcode query param from URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('passcode');
+            window.history.replaceState({}, '', url.pathname);
+            
+            // Stop sharing location if active
+            if (locationActive) {
+                stopLocationSharing();
+            }
+            
+            clearInterval(updateInterval);
+            document.getElementById('admin-view').classList.add('hidden');
+            document.getElementById('passcode-view').classList.remove('hidden');
+        }
+
+        async function verifyAccess() {
+            try {
+                const response = await fetch(`/api/admin/queue?passcode=${encodeURIComponent(passcode)}`);
+                if (response.status === 401) {
+                    localStorage.removeItem('admin_passcode');
+                    document.getElementById('login-error').classList.remove('hidden');
+                    document.getElementById('passcode-view').classList.remove('hidden');
+                    document.getElementById('admin-view').classList.add('hidden');
+                    return;
+                }
+                if (!response.ok) throw new Error('Request failed');
+                
+                // Store passcode for convenience
+                localStorage.setItem('admin_passcode', passcode);
+                document.getElementById('passcode-view').classList.add('hidden');
+                document.getElementById('admin-view').classList.remove('hidden');
+                
+                // Set URL query param if not present to support easy bookmarking
+                const url = new URL(window.location.href);
+                if (url.searchParams.get('passcode') !== passcode) {
+                    url.searchParams.set('passcode', passcode);
+                    window.history.replaceState({}, '', url.search);
+                }
+
+                loadData();
+                clearInterval(updateInterval);
+                updateInterval = setInterval(loadData, 3000); // Poll dashboard data
+
+            } catch (err) {
+                console.error('Verify error:', err);
+                alert('Connection error when validating dashboard access.');
+            }
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch(`/api/admin/queue?passcode=${encodeURIComponent(passcode)}`);
+                if (response.status === 401) return logout();
+                const data = await response.json();
+                
+                const selectedDate = document.getElementById('filter-date').value;
+                
+                // Store queue data filtered by selected date
+                queueData = data.queue.filter(ticket => {
+                    const ticketDate = ticket.date || new Date(ticket.timestamp).toLocaleDateString('en-CA');
+                    return ticketDate === selectedDate;
+                });
+                
+                // Update stats based on filtered list
+                const waitingList = queueData.filter(t => t.status === 'waiting');
+                document.getElementById('stat-total-waiting').innerText = waitingList.length;
+                document.getElementById('stat-total-today').innerText = queueData.length;
+
+                // Sync UI with location state on server if page loaded/refreshed
+                if (data.location && data.location.active) {
+                    if (!locationActive && !watchId) {
+                        startLocationSharing(data.location.ticketId);
+                    }
+                } else {
+                    if (locationActive || watchId) {
+                        stopLocationSharing();
+                    }
+                }
+
+                // Only redraw the table if the user is not actively typing in an inline edit field
+                const hasActiveEdit = document.activeElement && document.activeElement.classList.contains('inline-edit-input');
+                if (!hasActiveEdit) {
+                    renderQueue();
+                }
+            } catch (err) {
+                console.error('Error loading data:', err);
+            }
+        }
+
+        function renderQueue() {
+            const tbody = document.getElementById('queue-table-body');
+            
+            // Do not sort by status anymore, just use the array order from the server!
+            const sortedData = [...queueData];
+
+            if (sortedData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">No customers in queue</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = sortedData.map((ticket, index) => {
+                const baseUrl = (window.location.protocol === 'file:' || !window.location.origin || window.location.origin === 'null') ? 'http://localhost:3000' : window.location.origin;
+                const directUrl = `${baseUrl}/index.html?ticket=${encodeURIComponent(ticket.id)}`;
+                let statusBadgeClass = `badge badge-${ticket.status}`;
+                let displayStatus = ticket.status === 'called' ? 'started' : ticket.status;
+                const isFirst = index === 0;
+                const isLast = index === sortedData.length - 1;
+                
+                // 1. Status Actions (Slot 1)
+                let statusButtons = '';
+                if (ticket.status === 'waiting') {
+                    statusButtons = `<button class="btn-action" onclick="setTicketStatus('${ticket.id}', 'called')" title="Start Customer">▶</button>`;
+                } else if (ticket.status === 'called') {
+                    statusButtons = `<button class="btn-action success" onclick="setTicketStatus('${ticket.id}', 'done')" title="Complete Customer">✔</button>`;
+                } else {
+                    // Blank space holder for completed/cancelled tickets
+                    statusButtons = `<button class="btn-action" style="visibility: hidden; pointer-events: none;">✔</button>`;
+                }
+
+                // 2. Tracking Actions (Slot 2)
+                let trackingButtons = '';
+                if (ticket.status === 'waiting' || ticket.status === 'called') {
+                    const isTrackingThis = locationActive && (trackingTicketId === ticket.id);
+                    if (isTrackingThis) {
+                        trackingButtons = `<button class="btn-action danger" onclick="stopLocationSharing()" title="Stop Location Tracking">🛑</button>`;
+                    } else {
+                        trackingButtons = `<button class="btn-action info" onclick="startLocationSharing('${ticket.id}')" title="Start Location Tracking">📡</button>`;
+                    }
+                } else {
+                    // Blank space holder for completed tickets
+                    trackingButtons = `<button class="btn-action" style="visibility: hidden; pointer-events: none;">📡</button>`;
+                }
+
+                // 3. Delete Action (Slot 3) - Always visible
+                let deleteButton = `<button class="btn-action danger" onclick="deleteTicket('${ticket.id}')" title="Delete Ticket">🗑</button>`;
+
+                // 4. Re-queue Action (Slot 4)
+                let requeueButton = '';
+                if (ticket.status === 'called' || ticket.status === 'done') {
+                    requeueButton = `<button class="btn-action secondary" onclick="setTicketStatus('${ticket.id}', 'waiting')" title="Re-queue Customer">↺</button>`;
+                } else {
+                    // Blank space holder for waiting tickets
+                    requeueButton = `<button class="btn-action secondary" style="visibility: hidden; pointer-events: none;">↺</button>`;
+                }
+
+                const actionsHtml = `
+                    <div class="actions-cell">
+                        ${statusButtons}
+                        ${trackingButtons}
+                        ${deleteButton}
+                        ${requeueButton}
+                    </div>
+                `;
+
+                return `
+                    <tr class="queue-row">
+                        <td data-label="Order">
+                            <div style="display: flex; gap: 4px; align-items: center; justify-content: center;">
+                                <button class="btn-icon-sm" onclick="reorderTicket('${ticket.id}', 'up')" ${isFirst ? 'disabled style="opacity:0.25; cursor:not-allowed;"' : ''} title="Move Up">▲</button>
+                                <button class="btn-icon-sm" onclick="reorderTicket('${ticket.id}', 'down')" ${isLast ? 'disabled style="opacity:0.25; cursor:not-allowed;"' : ''} title="Move Down">▼</button>
+                            </div>
+                        </td>
+                        <td data-label="Name">
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <input type="text" class="inline-edit-input" value="${escapeHtml(ticket.name)}" placeholder="Name" onchange="updateCustomerDetails('${ticket.id}', this.value, null)" onkeydown="if(event.key === 'Enter') this.blur()"/>
+                                <input type="tel" class="inline-edit-input phone-input" value="${escapeHtml(ticket.phone || '')}" placeholder="No Phone" onchange="updateCustomerDetails('${ticket.id}', null, this.value)" onkeydown="if(event.key === 'Enter') this.blur()"/>
+                            </div>
+                        </td>
+                        <td data-label="Status"><span class="${statusBadgeClass}">${displayStatus}</span></td>
+                        <td data-label="Share Link">
+                            <div class="share-cell" style="display: flex; gap: 6px; align-items: center;">
+                                <a class="btn-action-text info" href="${directUrl}" target="_blank" title="Open Customer Link">Open Link ↗</a>
+                                <button class="btn-action-text secondary" onclick="copyToClipboard('${directUrl}', this)" title="Copy Link to Clipboard">Copy Link</button>
+                                ${ticket.phone ? `
+                                    <a class="btn-action-text info" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.3); color: #818cf8;" href="sms:${ticket.phone}?body=${encodeURIComponent(`Track your position in line here: ${directUrl}`)}" title="Send SMS Link">SMS</a>
+                                ` : ''}
+                            </div>
+                        </td>
+                        <td data-label="Actions">
+                            ${actionsHtml}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function deleteTicket(id) {
+            if (confirm('Are you sure you want to permanently delete this ticket?')) {
+                try {
+                    const response = await fetch(`/api/admin/delete?passcode=${encodeURIComponent(passcode)}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id })
+                    });
+                    if (!response.ok) throw new Error('Failed to delete');
+                    loadData();
+                } catch (err) {
+                    console.error(err);
+                    alert('Error deleting ticket');
+                }
+            }
+        }
+
+        async function reorderTicket(id, direction) {
+            try {
+                const response = await fetch(`/api/admin/reorder?passcode=${encodeURIComponent(passcode)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, direction })
+                });
+                if (!response.ok) throw new Error('Failed to reorder');
+                loadData();
+            } catch (err) {
+                console.error(err);
+                alert('Error reordering queue');
+            }
+        }
+
+        async function updateCustomerDetails(id, name, phone) {
+            try {
+                const payload = { id };
+                if (name !== null) payload.name = name;
+                if (phone !== null) payload.phone = phone;
+
+                const response = await fetch(`/api/admin/update?passcode=${encodeURIComponent(passcode)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error('Failed to update details');
+                loadData();
+            } catch (err) {
+                console.error(err);
+                alert('Error updating customer details');
+            }
+        }
+
+        async function addCustomer() {
+            const input = document.getElementById('new-customer-name');
+            const phoneInput = document.getElementById('new-customer-phone');
+            const dateInput = document.getElementById('filter-date');
+            const name = input.value.trim() || 'Customer';
+            const phone = phoneInput.value.trim();
+            const date = dateInput.value;
+
+            try {
+                const response = await fetch(`/api/admin/add?passcode=${encodeURIComponent(passcode)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, phone, date })
+                });
+                if (!response.ok) throw new Error('Failed to add');
+                input.value = '';
+                phoneInput.value = '';
+                loadData();
+            } catch (err) {
+                console.error(err);
+                alert('Error adding customer');
+            }
+        }
+
+
+        async function setTicketStatus(id, status) {
+            try {
+                const response = await fetch(`/api/admin/status?passcode=${encodeURIComponent(passcode)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, status })
+                });
+                if (!response.ok) throw new Error('Failed to update status');
+                loadData();
+            } catch (err) {
+                console.error(err);
+                alert('Error updating status');
+            }
+        }
+
+        function confirmReset() {
+            if (confirm('Are you sure you want to clear the entire queue? This cannot be undone.')) {
+                resetQueue();
+            }
+        }
+
+        async function resetQueue() {
+            try {
+                const response = await fetch(`/api/admin/reset?passcode=${encodeURIComponent(passcode)}`, {
+                    method: 'POST'
+                });
+                if (!response.ok) throw new Error('Failed to reset');
+                loadData();
+            } catch (err) {
+                console.error(err);
+                alert('Error resetting queue');
+            }
+        }
+
+        // Live Location toggling
+        function toggleLocation() {
+            if (locationActive) {
+                stopLocationSharing();
+            } else {
+                startLocationSharing(null);
+            }
+        }
+
+        function startLocationSharing(ticketId) {
+            if (!("geolocation" in navigator)) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+
+            const toggleBtn = document.getElementById('loc-toggle-btn');
+            const dot = document.getElementById('loc-status-dot');
+            const statusText = document.getElementById('loc-status-text');
+
+            trackingTicketId = ticketId || null;
+            locationActive = true;
+
+            // Rerender immediately to show "Stop Track" on the clicked row without waiting for GPS response
+            renderQueue();
+
+            // If GPS watcher is already running, just update the target ticket and send current coords
+            if (watchId !== null) {
+                if (trackingTicketId) {
+                    statusText.innerText = `Sharing active for #${trackingTicketId} (Lat: ${currentLat ? currentLat.toFixed(4) : '?'}, Lng: ${currentLng ? currentLng.toFixed(4) : '?'})`;
+                } else {
+                    statusText.innerText = `Sharing active globally (Lat: ${currentLat ? currentLat.toFixed(4) : '?'}, Lng: ${currentLng ? currentLng.toFixed(4) : '?'})`;
+                }
+                sendLocationToServer(currentLat, currentLng, true, trackingTicketId);
+                return;
+            }
+
+            toggleBtn.disabled = true;
+            statusText.innerText = "Requesting GPS permissions...";
+
+            // Inform server immediately that tracking is turned on (even if coordinates are pending)
+            sendLocationToServer(null, null, true, trackingTicketId);
+
+            // Start native browser watchPosition
+            // ponytail: high accuracy location tracking using native browser geolocation
+            watchId = navigator.geolocation.watchPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    currentLat = lat;
+                    currentLng = lng;
+                    locationActive = true;
+                    toggleBtn.disabled = false;
+                    toggleBtn.innerText = "Stop Location";
+                    toggleBtn.className = "danger";
+                    dot.className = "status-dot active";
+                    
+                    if (trackingTicketId) {
+                        statusText.innerText = `Sharing active for #${trackingTicketId} (Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)})`;
+                    } else {
+                        statusText.innerText = `Sharing active globally (Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)})`;
+                    }
+
+                    // Send location to server
+                    await sendLocationToServer(lat, lng, true, trackingTicketId);
+                },
+                (error) => {
+                    console.error("GPS Error:", error);
+                    let errMsg = "Unable to retrieve your location.";
+                    if (error.code === error.PERMISSION_DENIED) {
+                        errMsg = "Location permission denied. Enable location services in your browser settings.";
+                    }
+                    alert(errMsg);
+                    stopLocationSharing();
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 5000,
+                    timeout: 10000
+                }
+            );
+        }
+
+        async function stopLocationSharing() {
+            const toggleBtn = document.getElementById('loc-toggle-btn');
+            const dot = document.getElementById('loc-status-dot');
+            const statusText = document.getElementById('loc-status-text');
+
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+
+            trackingTicketId = null;
+            locationActive = false;
+            currentLat = null;
+            currentLng = null;
+            toggleBtn.disabled = false;
+            toggleBtn.innerText = "Start Location";
+            toggleBtn.className = "secondary";
+            dot.className = "status-dot inactive";
+            statusText.innerText = "Location Sharing is Offline";
+
+            // Notify server location is offline
+            await sendLocationToServer(null, null, false, null);
+            
+            // Reload local UI lists to update button states immediately
+            renderQueue();
+        }
+
+        async function sendLocationToServer(lat, lng, active, ticketId) {
+            try {
+                await fetch(`/api/admin/location?passcode=${encodeURIComponent(passcode)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lat, lng, active, ticketId })
+                });
+            } catch (err) {
+                console.error("Error pushing location:", err);
+            }
+        }
+
+        function copyToClipboard(text, btn) {
+            function showSuccess() {
+                const originalText = btn.innerText;
+                btn.innerText = "✅";
+                btn.style.background = "rgba(16, 185, 129, 0.3)";
+                btn.style.borderColor = "rgba(16, 185, 129, 0.5)";
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.background = "";
+                    btn.style.borderColor = "";
+                }, 1500);
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(showSuccess).catch(() => fallbackCopy(text));
+            } else {
+                fallbackCopy(text);
+            }
+
+            function fallbackCopy(str) {
+                try {
+                    const el = document.createElement('textarea');
+                    el.value = str;
+                    el.setAttribute('readonly', '');
+                    el.style.position = 'absolute';
+                    el.style.left = '-9999px';
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+                    showSuccess();
+                } catch (err) {
+                    console.error('Fallback copy failed:', err);
+                    prompt('Copy this link:', str);
+                }
+            }
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>

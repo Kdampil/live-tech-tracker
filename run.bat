@@ -1,0 +1,9 @@
+@echo off
+:: ponytail: simple Windows batch script to automate starting the server and opening the admin view
+cd /d "%~dp0"
+echo Starting the Queue & Live Location Tracker...
+start cmd /k "npm start"
+echo Waiting for server to initialize...
+timeout /t 2 >nul
+echo Opening Admin Dashboard...
+start http://localhost:3000/admin.html?passcode=admin123

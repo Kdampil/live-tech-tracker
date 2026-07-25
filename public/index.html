@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Tech Tracker</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Leaflet.js for free maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(15, 23, 42, 0.7);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --panel-border-glow: rgba(56, 189, 248, 0.2);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-cyan: #38bdf8;
+            --accent-indigo: #6366f1;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --border-radius-container: 16px;
+            --border-radius-card: 12px;
+            --backdrop-blur: blur(20px) saturate(180%);
+            --shadow-card: 0 12px 32px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 30% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 70% 80%, rgba(99, 102, 241, 0.08) 0%, transparent 45%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            letter-spacing: -0.015em;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            background: var(--panel-bg);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--border-radius-container);
+            padding: 36px 30px;
+            text-align: center;
+            box-shadow: var(--shadow-card);
+        }
+
+        h1 {
+            font-size: 2.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        /* Card States */
+        .card {
+            border-radius: var(--border-radius-card);
+            padding: 28px 24px;
+            margin-bottom: 24px;
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid var(--panel-border);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .no-ticket-form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        button:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Queue Number Hero Orb */
+        .queue-number-box {
+            margin: 20px 0;
+        }
+
+        .number-circle {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.15), rgba(15, 23, 42, 0.8));
+            border: 1.5px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3.6rem;
+            font-weight: 700;
+            background-clip: text;
+            color: #ffffff;
+            margin: 0 auto 16px auto;
+            transition: all 0.3s ease;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 18px;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-top: 12px;
+            border: 1px solid transparent;
+        }
+
+        .status-waiting {
+            background: rgba(245, 158, 11, 0.12);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.15);
+        }
+
+        .status-called {
+            background: rgba(56, 189, 248, 0.12);
+            color: #38bdf8;
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.2);
+        }
+
+        .status-done {
+            background: rgba(16, 185, 129, 0.12);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 14px rgba(16, 185, 129, 0.15);
+        }
+
+        /* Map Section */
+        .map-section {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        .map-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .map-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .map-status {
+            font-size: 0.85rem;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .map-status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #38bdf8;
+            display: inline-block;
+            box-shadow: 0 0 8px #38bdf8;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        #map {
+            height: 260px;
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid var(--panel-border);
+            background: #0f172a;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Info rows */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--panel-border);
+            padding-top: 14px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Live Tech Tracker</h1>
+        <p class="subtitle" id="subtitle-msg">Real-time technician arrival & queue updates</p>
+
+        <!-- Queue Status View -->
+        <div id="status-view" class="card">
+            <h2 id="customer-name" style="font-size: 1.3rem; margin-bottom: 5px;">-</h2>
+
+            
+            <div class="queue-number-box">
+                <div class="number-circle" id="queue-position">-</div>
+                <p id="queue-estimate-text" style="font-weight: 500; font-size: 1.1rem; color: var(--accent-neon);">People ahead of you</p>
+            </div>
+
+            <div id="status-badge-container">
+                <span class="status-badge status-waiting" id="status-text">Waiting</span>
+            </div>
+        </div>
+
+        <!-- Live Map View -->
+        <div id="map-section" class="map-section">
+            <div class="map-header">
+                <span class="map-title">Provider Live Location</span>
+                <span class="map-status" id="map-status-text">Live tracking active</span>
+            </div>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let ticketId = new URLSearchParams(window.location.search).get('ticket') || '';
+        let map = null;
+        let providerMarker = null;
+        let pollInterval = null;
+
+        // Initialize state automatically with no prerequisite info required
+        window.addEventListener('DOMContentLoaded', () => {
+            startPolling();
+        });
+
+        function startPolling() {
+            updateStatus();
+            // ponytail: simple setInterval polling handles updates with zero overhead/dependencies
+            pollInterval = setInterval(updateStatus, 3000);
+        }
+
+        async function updateStatus() {
+            try {
+                const apiBase = (window.location.protocol === 'file:' || !window.location.origin || window.location.origin === 'null') ? 'http://localhost:3000' : '';
+                const queryStr = ticketId ? `ticket=${encodeURIComponent(ticketId)}` : '';
+                const response = await fetch(`${apiBase}/api/status?${queryStr}`);
+                if (!response.ok) throw new Error('Failed to fetch status');
+                const data = await response.json();
+                
+                if (!data.ticket) {
+                    document.getElementById('customer-name').innerText = 'Queue Status';
+                    document.getElementById('queue-position').innerText = '0';
+                    document.getElementById('queue-estimate-text').innerText = 'No active tickets in queue';
+                    document.getElementById('status-text').innerText = 'Idle';
+                    document.getElementById('status-text').className = 'status-badge status-done';
+                    return;
+                }
+
+                // Lock ticketId to resolved server ticket ID for subsequent polling
+                ticketId = data.ticket.id;
+
+                // Update details
+                document.getElementById('customer-name').innerText = data.ticket.name;
+
+                const statusTextEl = document.getElementById('status-text');
+                const positionEl = document.getElementById('queue-position');
+                const estimateTextEl = document.getElementById('queue-estimate-text');
+
+                // Clear previous classes
+                statusTextEl.className = 'status-badge';
+
+                if (data.ticket.status === 'waiting') {
+                    statusTextEl.innerText = 'Waiting';
+                    statusTextEl.classList.add('status-waiting');
+                    
+                    // If someone is started (currentServingId is active), they count as one person ahead of waiting customers
+                    const hasActiveServing = !!data.currentServingId;
+                    const aheadCount = data.position ? (hasActiveServing ? data.position : data.position - 1) : 0;
+                    
+                    if (aheadCount === 0) {
+                        positionEl.innerText = 'NEXT';
+                        estimateTextEl.innerText = 'You are the next person!';
+                        positionEl.style.fontSize = '2.2rem';
+                    } else {
+                        positionEl.innerText = aheadCount;
+                        estimateTextEl.innerText = aheadCount === 1 ? 'Person ahead of you' : 'People ahead of you';
+                        positionEl.style.fontSize = '3.5rem';
+                    }
+                } else if (data.ticket.status === 'called') {
+                    statusTextEl.innerText = 'On the Way';
+                    statusTextEl.classList.add('status-called');
+                    positionEl.innerHTML = `<img src="/voyager.jpg" alt="Black Chrysler Voyager B/S/H/" style="width: 100px; height: 100px; object-fit: contain; border-radius: 50%;" />`;
+                    estimateTextEl.innerText = 'Your tech Wally is coming!';
+                    positionEl.style.fontSize = '1rem';
+                } else if (data.ticket.status === 'done') {
+                    statusTextEl.innerText = 'Completed';
+                    statusTextEl.classList.add('status-done');
+                    positionEl.innerText = '✓';
+                    estimateTextEl.innerText = 'Thank you!';
+                    positionEl.style.fontSize = '3rem';
+                    clearInterval(pollInterval); // Stop polling if done
+                } else if (data.ticket.status === 'cancelled') {
+                    statusTextEl.innerText = 'Cancelled';
+                    statusTextEl.classList.add('status-done');
+                    positionEl.innerText = '✕';
+                    estimateTextEl.innerText = 'Ticket cancelled';
+                    positionEl.style.fontSize = '3rem';
+                    clearInterval(pollInterval);
+                }
+
+                // Handle Location sharing map
+                const mapSection = document.getElementById('map-section');
+                if (data.location && data.location.lat && data.location.lng) {
+                    mapSection.style.display = 'flex';
+                    updateMap(data.location.lat, data.location.lng);
+                } else {
+                    mapSection.style.display = 'none';
+                    if (map) {
+                        map.remove();
+                        map = null;
+                        providerMarker = null;
+                    }
+                }
+
+            } catch (err) {
+                console.error('Polling error:', err);
+            }
+        }
+
+        function updateMap(lat, lng) {
+            if (!map) {
+                // Initialize map
+                map = L.map('map').setView([lat, lng], 15);
+                
+                // ponytail: CartoDB Dark Matter tile layer matches our premium dark theme for free
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(map);
+
+                // custom pulse/neon marker style using custom HTML/CSS marker
+                const customIcon = L.divIcon({
+                    className: 'custom-gps-marker',
+                    html: `
+                        <div style="
+                            position: relative;
+                            width: 46px;
+                            height: 46px;
+                        ">
+                            <img src="/voyager.jpg" style="
+                                width: 46px;
+                                height: 46px;
+                                border-radius: 50%;
+                                border: 2px solid #38bdf8;
+                                box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+                                object-fit: cover;
+                                background: #0f172a;
+                                z-index: 10;
+                                position: relative;
+                            " />
+                            <div style="
+                                width: 46px;
+                                height: 46px;
+                                background-color: rgba(56, 189, 248, 0.4);
+                                border-radius: 50%;
+                                animation: pulse-icon 1.5s infinite;
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                            "></div>
+                        </div>
+                        <style>
+                            @keyframes pulse-icon {
+                                0% { transform: scale(0.6); opacity: 1; }
+                                100% { transform: scale(2.2); opacity: 0; }
+                            }
+                        </style>
+                    `,
+                    iconSize: [46, 46],
+                    iconAnchor: [23, 23]
+                });
+
+                providerMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+            } else {
+                // Update position
+                const newLatLng = new L.LatLng(lat, lng);
+                providerMarker.setLatLng(newLatLng);
+                map.panTo(newLatLng);
+            }
+        }
+    </script>
+</body>
+</html>

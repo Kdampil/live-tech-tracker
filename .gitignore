@@ -1,0 +1,11 @@
+node_modules/
+package-lock.json
+data.json
+*.log
+.gemini/
+run_server.ps1
+theme_options.md
+ux_audit_report.md
+walkthrough.md
+implementation_plan.md
+task.md
