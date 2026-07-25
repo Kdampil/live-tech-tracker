@@ -103,6 +103,10 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+app.post('/api/admin/verify', requireAdmin, (req, res) => {
+  res.json({ success: true, message: 'Passcode verified successfully' });
+});
+
 app.get('/api/admin/passcode-status', (req, res) => {
   res.json({
     envKeyPresent: !!(process.env.PASSCODE || process.env.PASSWORD || process.env.ADMIN_PASSCODE || process.env.passcode),

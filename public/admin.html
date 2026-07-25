@@ -1003,7 +1003,14 @@
 
         async function verifyAccess(isInitialLoad = false) {
             try {
-                const response = await fetch(`/api/admin/queue?passcode=${encodeURIComponent(passcode)}`);
+                const response = await fetch('/api/admin/verify', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-passcode': passcode
+                    },
+                    body: JSON.stringify({ passcode })
+                });
                 if (response.status === 401) {
                     passcode = '';
                     localStorage.removeItem('admin_passcode');
@@ -1050,7 +1057,9 @@
 
         async function loadData() {
             try {
-                const response = await fetch(`/api/admin/queue?passcode=${encodeURIComponent(passcode)}`);
+                const response = await fetch(`/api/admin/queue?passcode=${encodeURIComponent(passcode)}`, {
+                    headers: { 'x-passcode': passcode }
+                });
                 if (response.status === 401) return logout();
                 if (!response.ok) throw new Error('Failed to load queue');
                 const data = await response.json();
