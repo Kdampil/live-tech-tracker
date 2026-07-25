@@ -827,22 +827,6 @@
                 </div>
                 <button id="loc-toggle-btn" class="secondary" onclick="toggleLocation()">Start Location</button>
             </div>
-            
-            <!-- Location Diagnostics Info -->
-            <div id="location-diagnostics" style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.85rem; display: flex; flex-direction: column; gap: 8px;">
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="color: var(--text-secondary);">Last Coordinates:</span>
-                    <span id="diag-coords" style="font-family: monospace; font-weight: 600; color: var(--text-primary);">None</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="color: var(--text-secondary);">Relay Status:</span>
-                    <span id="diag-relay-badge" class="badge" style="background: rgba(255,255,255,0.06); color: var(--text-secondary); font-size: 0.75rem; padding: 2px 8px;">Inactive</span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="color: var(--text-secondary);">Last Update Ping:</span>
-                    <span id="diag-last-ping" style="font-weight: 600; color: var(--text-primary);">-</span>
-                </div>
-            </div>
         </div>
 
         <!-- Queue List Card -->
@@ -1029,52 +1013,6 @@
                     if (locationActive || watchId) {
                         stopLocationSharing();
                     }
-                }
-
-                // Update Location Diagnostics info dynamically
-                const loc = data.location;
-                const diagCoords = document.getElementById('diag-coords');
-                const diagRelay = document.getElementById('diag-relay-badge');
-                const diagLastPing = document.getElementById('diag-last-ping');
-                
-                if (loc && loc.active) {
-                    if (loc.lat && loc.lng) {
-                        diagCoords.innerText = `${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`;
-                        
-                        const elapsedSecs = Math.round((Date.now() - loc.timestamp) / 1000);
-                        diagLastPing.innerText = `${elapsedSecs}s ago`;
-                        
-                        if (elapsedSecs < 20) {
-                            diagRelay.innerText = "Receiving Active Pings";
-                            diagRelay.className = "badge";
-                            diagRelay.style.background = "rgba(16, 185, 129, 0.15)";
-                            diagRelay.style.color = "#10b981";
-                        } else if (elapsedSecs < 60) {
-                            diagRelay.innerText = "Stalled (No updates > 20s)";
-                            diagRelay.className = "badge";
-                            diagRelay.style.background = "rgba(245, 158, 11, 0.15)";
-                            diagRelay.style.color = "#f59e0b";
-                        } else {
-                            diagRelay.innerText = "Stopped Relaying (Offline)";
-                            diagRelay.className = "badge";
-                            diagRelay.style.background = "rgba(239, 68, 68, 0.15)";
-                            diagRelay.style.color = "#ef4444";
-                        }
-                    } else {
-                        diagCoords.innerText = "Waiting for initial coordinates...";
-                        diagRelay.innerText = "Connecting...";
-                        diagRelay.className = "badge";
-                        diagRelay.style.background = "rgba(255,255,255,0.06)";
-                        diagRelay.style.color = "var(--text-secondary)";
-                        diagLastPing.innerText = "-";
-                    }
-                } else {
-                    diagCoords.innerText = "None";
-                    diagRelay.innerText = "Inactive";
-                    diagRelay.className = "badge";
-                    diagRelay.style.background = "rgba(255,255,255,0.06)";
-                    diagRelay.style.color = "var(--text-secondary)";
-                    diagLastPing.innerText = "-";
                 }
 
                 const hasActiveEdit = document.activeElement && document.activeElement.classList.contains('inline-edit-input');

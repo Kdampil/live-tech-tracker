@@ -11,7 +11,6 @@ const { Pool } = require('pg');
 
 const DATA_FILE = path.join(__dirname, 'data.json');
 const PASSCODE = process.env.PASSCODE || 'admin123';
-console.log("PASSCODE LOADED - Length:", PASSCODE ? PASSCODE.length : 0, "Starts with:", PASSCODE ? PASSCODE.substring(0, 3) : 'none');
 
 let state = {
   queue: [],
