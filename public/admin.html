@@ -786,7 +786,9 @@
                 Show Passcode
             </label>
             <button type="button" id="login-submit-btn" onclick="login()" style="touch-action: manipulation; margin-top: 4px;">Access Dashboard</button>
-            <p id="login-error" style="color: var(--accent-danger); font-size: 0.88rem; font-weight: 600; margin-top: 4px;" class="hidden">Incorrect Passcode. Please try again.</p>
+            <div id="login-error" class="hidden" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 10px 14px; color: #fca5a5; font-size: 0.9rem; font-weight: 600; text-align: center; margin-top: 4px;">
+                ⚠️ Incorrect passcode. Please try again.
+            </div>
             <p id="login-status-log" style="color: var(--accent-cyan); font-size: 0.82rem; font-family: monospace; margin-top: 6px; word-break: break-all;" class="hidden"></p>
         </div>
     </div>
@@ -937,6 +939,11 @@
         let passcode = new URLSearchParams(window.location.search).get('passcode') || localStorage.getItem('admin_passcode') || '';
 
         function checkAutoLogin(val) {
+            const errEl = document.getElementById('login-error');
+            if (errEl) {
+                errEl.classList.add('hidden');
+                errEl.style.display = 'none';
+            }
             const v = (val || '').trim().toLowerCase();
             if (v === 'kit120688' || v === 'admin123') {
                 login();
