@@ -304,6 +304,8 @@
         let ticketId = new URLSearchParams(window.location.search).get('ticket') || '';
         let map = null;
         let providerMarker = null;
+        let customerMarker = null;
+        let routePolyline = null;
         let pollInterval = null;
 
         // Initialize state automatically with no prerequisite info required
@@ -370,6 +372,26 @@
                     positionEl.innerHTML = `<img src="/voyager.jpg" alt="Black Chrysler Voyager B/S/H/" style="width: 100px; height: 100px; object-fit: contain; border-radius: 50%;" />`;
                     estimateTextEl.innerText = 'Your tech Wally is coming!';
                     positionEl.style.fontSize = '1rem';
+
+                    // Fetch driving route and ETA duration from open routing API (OSRM)
+                    if (data.location && data.location.lat && data.location.lng && data.ticket.destLat && data.ticket.destLng) {
+                        try {
+                            const routeRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${data.location.lng},${data.location.lat};${data.ticket.destLng},${data.ticket.destLat}?overview=full&geometries=geojson`);
+                            if (routeRes.ok) {
+                                const routeData = await routeRes.json();
+                                if (routeData.routes && routeData.routes[0]) {
+                                    const durationSecs = routeData.routes[0].duration;
+                                    const etaMins = Math.round(durationSecs / 60);
+                                    estimateTextEl.innerText = `Your tech Wally is coming! ETA: ${etaMins} mins`;
+                                    
+                                    // Save route line path to draw on map
+                                    data.location.routeGeometry = routeData.routes[0].geometry;
+                                }
+                            }
+                        } catch (err) {
+                            console.error('OSRM route fetch failed:', err);
+                        }
+                    }
                 } else if (data.ticket.status === 'done') {
                     statusTextEl.innerText = 'Completed';
                     statusTextEl.classList.add('status-done');
@@ -390,13 +412,15 @@
                 const mapSection = document.getElementById('map-section');
                 if (data.location && data.location.lat && data.location.lng) {
                     mapSection.style.display = 'flex';
-                    updateMap(data.location.lat, data.location.lng);
+                    updateMap(data.location.lat, data.location.lng, data.ticket.destLat, data.ticket.destLng, data.location.routeGeometry);
                 } else {
                     mapSection.style.display = 'none';
                     if (map) {
                         map.remove();
                         map = null;
                         providerMarker = null;
+                        customerMarker = null;
+                        routePolyline = null;
                     }
                 }
 
@@ -405,7 +429,7 @@
             }
         }
 
-        function updateMap(lat, lng) {
+        function updateMap(lat, lng, destLat, destLng, routeGeometry) {
             if (!map) {
                 // Initialize map
                 map = L.map('map').setView([lat, lng], 15);
@@ -462,7 +486,63 @@
                 // Update position
                 const newLatLng = new L.LatLng(lat, lng);
                 providerMarker.setLatLng(newLatLng);
-                map.panTo(newLatLng);
+            }
+
+            // Handle Customer Destination marker
+            if (destLat && destLng) {
+                const customerIcon = L.divIcon({
+                    className: 'custom-customer-marker',
+                    html: `
+                        <div style="
+                            width: 16px;
+                            height: 16px;
+                            background-color: #10b981;
+                            border: 3px solid #ffffff;
+                            border-radius: 50%;
+                            box-shadow: 0 0 10px #10b981;
+                        "></div>
+                    `,
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8]
+                });
+
+                if (!customerMarker) {
+                    customerMarker = L.marker([destLat, destLng], { icon: customerIcon }).addTo(map);
+                } else {
+                    customerMarker.setLatLng(new L.LatLng(destLat, destLng));
+                }
+            } else {
+                if (customerMarker) {
+                    map.removeLayer(customerMarker);
+                    customerMarker = null;
+                }
+            }
+
+            // Handle Route Polyline path
+            if (routeGeometry) {
+                if (routePolyline) {
+                    map.removeLayer(routePolyline);
+                }
+                routePolyline = L.geoJSON(routeGeometry, {
+                    style: {
+                        color: '#38bdf8',
+                        weight: 4,
+                        opacity: 0.8,
+                        dashArray: '5, 10'
+                    }
+                }).addTo(map);
+
+                // Auto-fit bounds to display both points clearly
+                if (destLat && destLng) {
+                    const bounds = L.latLngBounds([lat, lng], [destLat, destLng]);
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                }
+            } else {
+                if (routePolyline) {
+                    map.removeLayer(routePolyline);
+                    routePolyline = null;
+                }
+                map.panTo(new L.LatLng(lat, lng));
             }
         }
     </script>

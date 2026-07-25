@@ -95,11 +95,17 @@ app.get('/api/admin/queue', requireAdmin, (req, res) => {
 app.post('/api/admin/add', requireAdmin, (req, res) => {
   const name = (req.body.name || 'Customer').trim();
   const phone = (req.body.phone || '').trim();
+  const address = (req.body.address || '').trim();
+  const destLat = req.body.destLat !== undefined ? Number(req.body.destLat) : null;
+  const destLng = req.body.destLng !== undefined ? Number(req.body.destLng) : null;
   const date = req.body.date || new Date().toISOString().split('T')[0];
   const ticket = {
     id: Math.random().toString(36).substring(2, 9),
     name,
     phone,
+    address,
+    destLat,
+    destLng,
     date,
     status: 'waiting',
     timestamp: Date.now()
@@ -218,7 +224,7 @@ app.post('/api/admin/reorder', requireAdmin, (req, res) => {
 });
 
 app.post('/api/admin/update', requireAdmin, (req, res) => {
-  const { id, name, phone } = req.body;
+  const { id, name, phone, address, destLat, destLng } = req.body;
   const ticket = state.queue.find(t => t.id === id);
   if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
 
@@ -227,6 +233,15 @@ app.post('/api/admin/update', requireAdmin, (req, res) => {
   }
   if (phone !== undefined && phone !== null) {
     ticket.phone = phone.trim();
+  }
+  if (address !== undefined && address !== null) {
+    ticket.address = address.trim();
+  }
+  if (destLat !== undefined) {
+    ticket.destLat = destLat !== null ? Number(destLat) : null;
+  }
+  if (destLng !== undefined) {
+    ticket.destLng = destLng !== null ? Number(destLng) : null;
   }
 
   saveState();
