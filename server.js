@@ -6,27 +6,78 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+const { Pool } = require('pg');
+
 const DATA_FILE = path.join(__dirname, 'data.json');
 const PASSCODE = process.env.PASSCODE || 'admin123';
 
-// ponytail: local JSON file database for zero-dependency persistence
 let state = {
   queue: [],
   currentServingId: null,
   location: { lat: null, lng: null, active: false, timestamp: null, ticketId: null }
 };
 
-if (fs.existsSync(DATA_FILE)) {
-  try {
-    state = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-  } catch (err) {
-    console.error('Error reading database file, starting fresh:', err);
+let pool = null;
+if (process.env.DATABASE_URL) {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+}
+
+// Load state asynchronously
+async function loadState() {
+  if (pool) {
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS queue_state (
+          key VARCHAR(50) PRIMARY KEY,
+          value JSONB NOT NULL
+        )
+      `);
+      const res = await pool.query("SELECT value FROM queue_state WHERE key = 'state'");
+      if (res.rows.length > 0) {
+        state = res.rows[0].value;
+      } else {
+        await pool.query("INSERT INTO queue_state (key, value) VALUES ('state', $1)", [JSON.stringify(state)]);
+      }
+    } catch (err) {
+      console.error('Error loading state from PostgreSQL database:', err);
+    }
+  } else {
+    // Local JSON file database fallback
+    if (fs.existsSync(DATA_FILE)) {
+      try {
+        state = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      } catch (err) {
+        console.error('Error reading local database file, starting fresh:', err);
+      }
+    }
   }
 }
 
-function saveState() {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2));
+// Save state asynchronously
+async function saveState() {
+  if (pool) {
+    try {
+      await pool.query("UPDATE queue_state SET value = $1 WHERE key = 'state'", [JSON.stringify(state)]);
+    } catch (err) {
+      console.error('Error saving state to PostgreSQL database:', err);
+    }
+  } else {
+    // Local JSON file database fallback
+    try {
+      fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2));
+    } catch (err) {
+      console.error('Error writing to local database file:', err);
+    }
+  }
 }
+
+// Load initial state at startup
+loadState().then(() => {
+  console.log("Database state initialized successfully.");
+});
 
 // Admin passcode middleware
 function requireAdmin(req, res, next) {
