@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Queue Admin Dashboard</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,7 +11,7 @@
     <style>
         :root {
             --bg-color: #0b0f19;
-            --panel-bg: rgba(15, 23, 42, 0.7);
+            --panel-bg: rgba(15, 23, 42, 0.75);
             --panel-border: rgba(255, 255, 255, 0.08);
             --panel-border-glow: rgba(56, 189, 248, 0.2);
             --text-primary: #f8fafc;
@@ -32,6 +32,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -46,7 +47,10 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding: 40px 20px;
+            padding: max(20px, env(safe-area-inset-top, 20px)) 
+                     max(16px, env(safe-area-inset-right, 16px)) 
+                     max(24px, env(safe-area-inset-bottom, 24px)) 
+                     max(16px, env(safe-area-inset-left, 16px));
             letter-spacing: -0.015em;
         }
 
@@ -66,9 +70,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 12px;
         }
 
         h1 {
@@ -83,7 +87,6 @@
         .subtitle {
             font-size: 0.95rem;
             color: var(--text-secondary);
-            margin-bottom: 30px;
         }
 
         .passcode-view {
@@ -96,7 +99,7 @@
         .card {
             border-radius: var(--border-radius-card);
             padding: 24px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             background: rgba(30, 41, 59, 0.4);
             border: 1px solid var(--panel-border);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -116,9 +119,11 @@
             justify-content: space-between;
             align-items: center;
             letter-spacing: -0.01em;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
-        /* Forms & Buttons */
+        /* Forms & Inputs */
         .flex-row {
             display: flex;
             gap: 12px;
@@ -127,13 +132,13 @@
 
         input {
             flex: 1;
-            min-width: 200px;
+            min-width: 180px;
             padding: 12px 16px;
             background: rgba(15, 23, 42, 0.8);
             border: 1px solid var(--panel-border);
             border-radius: 8px;
             color: white;
-            font-size: 0.95rem;
+            font-size: 16px; /* Prevents iOS Safari auto-zoom on mobile */
             font-family: inherit;
             outline: none;
             transition: all 0.2s ease;
@@ -156,6 +161,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            touch-action: manipulation;
         }
 
         button:hover {
@@ -274,36 +280,80 @@
             50% { opacity: 1; transform: scale(1.1); }
         }
 
-        /* Table & Lists */
-        .table-container {
-            overflow-x: auto;
-            border-radius: 8px;
+        /* Queue Toolbar & Controls */
+        .queue-toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: center;
         }
 
-        table {
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .search-box input {
             width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 0.95rem;
+            padding: 10px 14px 10px 36px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            font-size: 16px;
+            color: var(--text-primary);
         }
 
-        th, td {
-            padding: 14px 12px;
-            border-bottom: 1px solid var(--panel-border);
-            white-space: nowrap;
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.85rem;
+            opacity: 0.6;
+            pointer-events: none;
         }
 
-        th {
-            color: var(--text-secondary);
+        .status-tabs {
+            display: flex;
+            gap: 4px;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--panel-border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab-btn {
+            padding: 8px 14px;
+            font-size: 0.82rem;
             font-weight: 600;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            background: rgba(15, 23, 42, 0.4);
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: none;
+            transition: all 0.2s ease;
+            min-height: 36px;
+            touch-action: manipulation;
         }
 
-        tr:last-child td {
-            border-bottom: none;
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-primary);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
         }
 
         /* Pill Badges */
@@ -343,9 +393,37 @@
             border-color: rgba(239, 68, 68, 0.3);
         }
 
+        /* Table Desktop View */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--panel-border);
+            white-space: nowrap;
+        }
+
+        th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            background: rgba(15, 23, 42, 0.4);
+        }
+
         .btn-action {
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -358,57 +436,38 @@
             transition: all 0.2s ease;
             padding: 0;
             user-select: none;
+            touch-action: manipulation;
         }
         .btn-action:hover {
             background: rgba(255, 255, 255, 0.1);
             border-color: rgba(255, 255, 255, 0.2);
             transform: translateY(-1px);
         }
-        .btn-action:focus-visible {
-            outline: 2px solid var(--accent-cyan);
-            outline-offset: 1px;
-        }
         .btn-action.success {
             background: rgba(16, 185, 129, 0.15);
             border-color: rgba(16, 185, 129, 0.3);
             color: #34d399;
-        }
-        .btn-action.success:hover {
-            background: rgba(16, 185, 129, 0.3);
-            border-color: rgba(16, 185, 129, 0.5);
         }
         .btn-action.info {
             background: rgba(56, 189, 248, 0.15);
             border-color: rgba(56, 189, 248, 0.3);
             color: #38bdf8;
         }
-        .btn-action.info:hover {
-            background: rgba(56, 189, 248, 0.3);
-            border-color: rgba(56, 189, 248, 0.5);
-        }
         .btn-action.danger {
             background: rgba(239, 68, 68, 0.15);
             border-color: rgba(239, 68, 68, 0.3);
             color: #f87171;
-        }
-        .btn-action.danger:hover {
-            background: rgba(239, 68, 68, 0.3);
-            border-color: rgba(239, 68, 68, 0.5);
         }
         .btn-action.secondary {
             background: rgba(255, 255, 255, 0.04);
             border-color: var(--panel-border);
             color: var(--text-primary);
         }
-        .btn-action.secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
 
         .btn-icon-sm {
-            width: 24px;
-            height: 24px;
-            font-size: 0.72rem;
+            width: 28px;
+            height: 28px;
+            font-size: 0.75rem;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -420,22 +479,14 @@
             transition: all 0.2s ease;
             padding: 0;
             user-select: none;
-        }
-        .btn-icon-sm:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
-        }
-        .btn-icon-sm:focus-visible {
-            outline: 2px solid var(--accent-cyan);
-            outline-offset: 1px;
+            touch-action: manipulation;
         }
 
         .btn-action-text {
-            padding: 5px 10px;
-            font-size: 0.78rem;
+            padding: 6px 12px;
+            font-size: 0.8rem;
             font-weight: 600;
-            border-radius: 6px;
+            border-radius: 8px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--panel-border);
             color: var(--text-primary);
@@ -447,95 +498,30 @@
             transition: all 0.2s ease;
             white-space: nowrap;
             user-select: none;
-        }
-        .btn-action-text:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.25);
-            color: #ffffff;
-            transform: translateY(-1px);
+            touch-action: manipulation;
         }
         .btn-action-text.info {
             background: rgba(56, 189, 248, 0.12);
             border-color: rgba(56, 189, 248, 0.3);
             color: #38bdf8;
         }
-        .btn-action-text.info:hover {
-            background: rgba(56, 189, 248, 0.25);
-            border-color: rgba(56, 189, 248, 0.5);
-            color: #7dd3fc;
-        }
-        .btn-action-text.secondary {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--panel-border);
-            color: var(--text-primary);
-        }
-        .btn-action-text.secondary:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.25);
-        }
 
-        .copy-input-group {
+        .actions-cell, .share-cell {
             display: flex;
-            align-items: center;
             gap: 6px;
-            max-width: 250px;
+            align-items: center;
         }
 
-        .copy-url {
-            font-size: 0.8rem;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--panel-border);
-            border-radius: 4px;
-            padding: 6px;
-            color: var(--text-secondary);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            user-select: all;
-            flex: 1;
-        }
-
-        .actions-cell {
-            display: flex;
-            gap: 4px; /* Reduced gap to fit all buttons on one row */
-            flex-wrap: nowrap;
-        }
-
-        .share-cell {
-            display: flex;
-            gap: 4px; /* Reduced gap to fit all buttons on one row */
-            flex-wrap: nowrap;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* Keyboard Focus Indicator */
-        button:focus-visible, input:focus-visible, a:focus-visible {
-            outline: 2px solid var(--text-secondary);
-            outline-offset: 2px;
-        }
-
-        /* Row Highlight */
-        .queue-row {
-            transition: background-color 0.2s ease;
-        }
-        .queue-row:hover {
-            background-color: rgba(255, 255, 255, 0.01);
-        }
-
-        /* Inline edit inputs styling */
         .inline-edit-input {
             background: transparent;
             border: 1px solid transparent;
             padding: 4px 8px;
             color: var(--text-primary);
-            font-size: 0.95rem;
+            font-size: 16px;
             font-family: inherit;
             border-radius: 4px;
             width: 100%;
-            max-width: 130px; /* Reduced from 150px to make name columns tighter */
+            max-width: 150px;
             cursor: pointer;
             transition: background 0.2s, border-color 0.2s;
         }
@@ -543,215 +529,246 @@
             background: rgba(255, 255, 255, 0.03);
             border-color: var(--panel-border);
         }
-        .inline-edit-input:focus {
-            background: var(--bg-color);
-            border-color: var(--text-secondary);
-            cursor: text;
-            outline: none !important;
-        }
         .inline-edit-input.phone-input {
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             color: var(--text-secondary);
-            margin-top: 4px;
         }
 
-        /* Mobile Card View styling */
-        @media (max-width: 767px) {
-            table, thead, tbody, th, td, tr { 
-                display: block; 
-            }
-            thead { 
-                display: none; 
-            }
-            .queue-row {
-                margin-bottom: 16px;
-                border: 1px solid var(--panel-border);
-                border-radius: 8px;
-                padding: 16px;
-                background: #18181b;
-            }
-            td {
-                border: none;
-                padding: 8px 0;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-bottom: 1px solid var(--panel-border);
-                white-space: normal; /* Allow text/buttons to wrap inside card cells on mobile */
-            }
-            td:last-child {
-                border-bottom: none;
-                padding-top: 12px;
-            }
-            td::before {
-                content: attr(data-label);
-                font-weight: 600;
-                color: var(--text-secondary);
-                font-size: 0.8rem;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-            .actions-cell, .share-cell {
-                flex-wrap: wrap;
-                justify-content: flex-end;
-                gap: 6px;
-            }
+        /* Mobile Cards List View (Hidden on Desktop) */
+        .mobile-cards-view {
+            display: none;
         }
 
-        @media screen and (max-width: 768px) {
+        .hidden {
+            display: none !important;
+        }
+
+        /* ---------------------------------------------------- */
+        /* iPhone 15 & Mobile Responsive Layout (< 768px)       */
+        /* ---------------------------------------------------- */
+        @media screen and (max-width: 767px) {
             body {
                 padding: max(12px, env(safe-area-inset-top, 12px)) 
                          max(10px, env(safe-area-inset-right, 10px)) 
-                         max(16px, env(safe-area-inset-bottom, 16px)) 
-                         max(10px, env(safe-area-inset-left, 10px)) !important;
-                align-items: flex-start;
+                         max(20px, env(safe-area-inset-bottom, 20px)) 
+                         max(10px, env(safe-area-inset-left, 10px));
             }
 
             .container {
-                padding: 16px 12px !important;
-                border-radius: 16px !important;
-                max-width: 100% !important;
+                padding: 16px 12px;
+                border-radius: 16px;
             }
 
             h1 {
-                font-size: 1.65rem;
+                font-size: 1.55rem;
             }
 
             .header {
-                margin-bottom: 20px;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
+                margin-bottom: 16px;
             }
 
-            /* Stat Cards layout alignment */
             .grid-3 {
-                grid-template-columns: repeat(3, 1fr) !important;
-                gap: 8px !important;
-                margin-bottom: 16px !important;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+                margin-bottom: 16px;
             }
 
             .stat-card {
-                padding: 10px 6px !important;
-                border-radius: 10px !important;
+                padding: 12px 8px;
             }
 
             .stat-value {
-                font-size: 1.35rem !important;
-            }
-
-            .stat-label {
-                font-size: 0.65rem !important;
-                letter-spacing: 0.02em !important;
+                font-size: 1.4rem;
             }
 
             .card {
-                padding: 14px 12px !important;
-                margin-bottom: 14px !important;
-                border-radius: 12px !important;
+                padding: 14px 12px;
+                margin-bottom: 14px;
+                border-radius: 12px;
             }
 
             .flex-row {
-                flex-direction: column; /* Stack controls vertically to prevent clipping */
+                flex-direction: column;
                 gap: 8px;
             }
 
-            input, select, textarea, .inline-edit-input, .phone-input {
-                font-size: 16px !important; /* Prevents Safari dynamic zoom lock on inputs */
-                width: 100%;
-                min-width: 0 !important; /* Forces input to stay in container limits */
-            }
-
-            /* Table to Card List Collapse Layout */
+            /* Hide Desktop Table View on Mobile */
             .table-container {
-                overflow-x: visible; /* Disable horizontal scrollbars */
+                display: none;
             }
 
-            table, thead, tbody, th, td, tr {
-                display: block;
+            /* Display Mobile Cards List View */
+            .mobile-cards-view {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
             }
 
-            thead {
-                display: none; /* Hide header columns */
+            /* Mobile Summary Card (High density, Collapsible Accordion) */
+            .mobile-card {
+                background: rgba(15, 23, 42, 0.7);
+                border: 1px solid var(--panel-border);
+                border-radius: 12px;
+                overflow: hidden;
+                transition: border-color 0.2s ease, box-shadow 0.2s ease;
             }
 
-            tr {
-                margin-bottom: 8px;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 10px;
+            .mobile-card.expanded {
+                border-color: rgba(56, 189, 248, 0.35);
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            }
+
+            /* Card Header Bar (~60px height, 44px min tap targets) */
+            .mobile-card-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
                 padding: 10px 12px;
-                background: rgba(15, 23, 42, 0.5);
-                display: grid;
-                grid-template-areas: 
-                    "order name status"
-                    "share actions";
-                grid-template-columns: auto 1fr auto;
+                gap: 10px;
+                min-height: 60px;
+                cursor: pointer;
+                user-select: none;
+            }
+
+            .mobile-card-header:active {
+                background: rgba(255, 255, 255, 0.03);
+            }
+
+            .mobile-card-main {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex: 1;
+                min-width: 0;
+            }
+
+            .mobile-order-num {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: rgba(56, 189, 248, 0.12);
+                border: 1px solid rgba(56, 189, 248, 0.25);
+                color: #38bdf8;
+                font-weight: 700;
+                font-size: 0.85rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+
+            .mobile-info {
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+                flex: 1;
+            }
+
+            .mobile-name {
+                font-weight: 600;
+                font-size: 0.95rem;
+                color: var(--text-primary);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .mobile-phone-sub {
+                font-size: 0.78rem;
+                color: var(--text-secondary);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-top: 2px;
+            }
+
+            .mobile-actions-quick {
+                display: flex;
+                align-items: center;
                 gap: 8px;
+                flex-shrink: 0;
+            }
+
+            /* Primary Quick Action Button on Mobile Header (44px x 44px min) */
+            .mobile-quick-btn {
+                min-height: 42px;
+                padding: 0 14px;
+                font-size: 0.88rem;
+                font-weight: 600;
+                border-radius: 8px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                cursor: pointer;
+                touch-action: manipulation;
+                border: none;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            }
+
+            .mobile-expand-toggle {
+                width: 38px;
+                height: 42px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid var(--panel-border);
+                border-radius: 8px;
+                color: var(--text-secondary);
+                font-size: 0.75rem;
+                cursor: pointer;
+                transition: transform 0.2s ease;
+                touch-action: manipulation;
+            }
+
+            .mobile-expand-toggle.rotated {
+                transform: rotate(180deg);
+                color: var(--accent-cyan);
+            }
+
+            /* Mobile Expandable Drawer */
+            .mobile-card-drawer {
+                padding: 12px 14px;
+                border-top: 1px solid rgba(255, 255, 255, 0.06);
+                background: rgba(10, 15, 25, 0.6);
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .drawer-section {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .drawer-label {
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+
+            .drawer-row {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
                 align-items: center;
             }
 
-            tr:last-child {
-                margin-bottom: 0;
-            }
-
-            td {
-                border: none !important;
-                padding: 0 !important;
-                display: flex;
+            .mobile-btn-full {
+                flex: 1;
+                min-width: 100px;
+                min-height: 42px;
+                font-size: 0.82rem;
+                display: inline-flex;
                 align-items: center;
-                font-size: 0.9rem;
-            }
-
-            td[data-label="Order"] {
-                grid-area: order;
-            }
-
-            td[data-label="Name"] {
-                grid-area: name;
-                align-items: flex-start;
-            }
-
-            td[data-label="Status"] {
-                grid-area: status;
-                justify-content: flex-end;
-            }
-
-            td[data-label="Share Link"] {
-                grid-area: share;
-                border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
-                padding-top: 8px !important;
-                justify-content: flex-start;
-            }
-
-            td[data-label="Actions"] {
-                grid-area: actions;
-                border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
-                padding-top: 8px !important;
-                justify-content: flex-end;
-            }
-
-            /* Hide headers on card elements */
-            td::before {
-                display: none !important;
-            }
-
-            /* Redefine action elements heights and styles */
-            .actions-cell {
-                width: auto;
-                display: flex;
-                gap: 6px !important;
-            }
-
-            .share-cell {
-                width: auto;
-                display: flex;
-                gap: 4px !important;
-            }
-
-            .copy-input-group {
-                max-width: 100%;
-                width: 100%;
-                justify-content: flex-end;
+                justify-content: center;
             }
         }
     </style>
@@ -816,8 +833,23 @@
         <div class="card">
             <div class="card-title">
                 <span>Customer Queue</span>
-                <input type="date" id="filter-date" style="max-width:180px; padding:6px 12px; background:rgba(0,0,0,0.4); font-size:0.9rem;" onchange="loadData()" />
+                <input type="date" id="filter-date" style="max-width:160px; padding:6px 12px; background:rgba(0,0,0,0.4); font-size:0.9rem;" onchange="loadData()" />
             </div>
+
+            <!-- Queue Toolbar (Search, Filter Tabs, Mobile Expand All) -->
+            <div class="queue-toolbar">
+                <div class="search-box">
+                    <input type="text" id="queue-search" placeholder="Search name or phone..." oninput="onSearchInput(this.value)" />
+                </div>
+                <div class="status-tabs">
+                    <button class="tab-btn active" data-status="all" onclick="setStatusFilter('all')">All (<span id="tab-count-all">0</span>)</button>
+                    <button class="tab-btn" data-status="waiting" onclick="setStatusFilter('waiting')">Waiting (<span id="tab-count-waiting">0</span>)</button>
+                    <button class="tab-btn" data-status="called" onclick="setStatusFilter('called')">Active (<span id="tab-count-called">0</span>)</button>
+                    <button class="tab-btn" data-status="done" onclick="setStatusFilter('done')">Done (<span id="tab-count-done">0</span>)</button>
+                </div>
+            </div>
+
+            <!-- Desktop View: Table -->
             <div class="table-container">
                 <table>
                     <thead>
@@ -836,6 +868,11 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Mobile View: Collapsible Card Accordion List -->
+            <div class="mobile-cards-view" id="mobile-cards-list">
+                <!-- Populated by JavaScript -->
             </div>
         </div>
 
@@ -858,8 +895,13 @@
         let currentLat = null;
         let currentLng = null;
 
+        // Mobile Card Accordion & Filter State
+        // ponytail: native Set tracking for card accordion expansion state
+        let expandedTickets = new Set();
+        let currentStatusFilter = 'all';
+        let searchQuery = '';
+
         window.addEventListener('DOMContentLoaded', () => {
-            // Set default date input to local today (YYYY-MM-DD)
             document.getElementById('filter-date').value = new Date().toLocaleDateString('en-CA');
             if (passcode) {
                 verifyAccess();
@@ -876,12 +918,10 @@
 
         function logout() {
             localStorage.removeItem('admin_passcode');
-            // Remove passcode query param from URL
             const url = new URL(window.location.href);
             url.searchParams.delete('passcode');
             window.history.replaceState({}, '', url.pathname);
             
-            // Stop sharing location if active
             if (locationActive) {
                 stopLocationSharing();
             }
@@ -903,12 +943,11 @@
                 }
                 if (!response.ok) throw new Error('Request failed');
                 
-                // Store passcode for convenience
                 localStorage.setItem('admin_passcode', passcode);
+                document.getElementById('passcode-view').classList.hidden = true;
                 document.getElementById('passcode-view').classList.add('hidden');
                 document.getElementById('admin-view').classList.remove('hidden');
                 
-                // Remove passcode from URL address bar for security
                 const url = new URL(window.location.href);
                 if (url.searchParams.has('passcode')) {
                     url.searchParams.delete('passcode');
@@ -917,7 +956,7 @@
 
                 loadData();
                 clearInterval(updateInterval);
-                updateInterval = setInterval(loadData, 3000); // Poll dashboard data
+                updateInterval = setInterval(loadData, 3000);
 
             } catch (err) {
                 console.error('Verify error:', err);
@@ -933,18 +972,11 @@
                 
                 const selectedDate = document.getElementById('filter-date').value;
                 
-                // Store queue data filtered by selected date
                 queueData = data.queue.filter(ticket => {
                     const ticketDate = ticket.date || new Date(ticket.timestamp).toLocaleDateString('en-CA');
                     return ticketDate === selectedDate;
                 });
                 
-                // Update stats based on filtered list
-                const waitingList = queueData.filter(t => t.status === 'waiting');
-                document.getElementById('stat-total-waiting').innerText = waitingList.length;
-                document.getElementById('stat-total-today').innerText = queueData.length;
-
-                // Sync UI with location state on server if page loaded/refreshed
                 if (data.location && data.location.active) {
                     if (!locationActive && !watchId) {
                         startLocationSharing(data.location.ticketId);
@@ -955,7 +987,6 @@
                     }
                 }
 
-                // Only redraw the table if the user is not actively typing in an inline edit field
                 const hasActiveEdit = document.activeElement && document.activeElement.classList.contains('inline-edit-input');
                 if (!hasActiveEdit) {
                     renderQueue();
@@ -965,101 +996,233 @@
             }
         }
 
-        function renderQueue() {
-            const tbody = document.getElementById('queue-table-body');
-            
-            // Do not sort by status anymore, just use the array order from the server!
-            const sortedData = [...queueData];
+        function setStatusFilter(status) {
+            currentStatusFilter = status;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.status === status);
+            });
+            renderQueue();
+        }
 
-            if (sortedData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">No customers in queue</td></tr>`;
-                return;
+        function onSearchInput(val) {
+            searchQuery = val.trim().toLowerCase();
+            renderQueue();
+        }
+
+        function toggleExpandCard(ticketId, event) {
+            if (event) event.stopPropagation();
+            if (expandedTickets.has(ticketId)) {
+                expandedTickets.delete(ticketId);
+            } else {
+                expandedTickets.add(ticketId);
+            }
+            renderQueue();
+        }
+
+        function renderQueue() {
+            const dateQueue = [...queueData];
+
+            // Tab counters based on dateQueue
+            const waitingCount = dateQueue.filter(t => t.status === 'waiting').length;
+            const calledCount = dateQueue.filter(t => t.status === 'called').length;
+            const doneCount = dateQueue.filter(t => t.status === 'done').length;
+
+            document.getElementById('stat-total-waiting').innerText = waitingCount;
+            document.getElementById('stat-total-today').innerText = dateQueue.length;
+            
+            const elAll = document.getElementById('tab-count-all');
+            const elWait = document.getElementById('tab-count-waiting');
+            const elCall = document.getElementById('tab-count-called');
+            const elDone = document.getElementById('tab-count-done');
+            if (elAll) elAll.innerText = dateQueue.length;
+            if (elWait) elWait.innerText = waitingCount;
+            if (elCall) elCall.innerText = calledCount;
+            if (elDone) elDone.innerText = doneCount;
+
+            // Apply filter & search
+            const filteredQueue = dateQueue.filter(ticket => {
+                if (currentStatusFilter !== 'all' && ticket.status !== currentStatusFilter) return false;
+                if (searchQuery) {
+                    const nameMatch = ticket.name.toLowerCase().includes(searchQuery);
+                    const phoneMatch = (ticket.phone || '').includes(searchQuery);
+                    if (!nameMatch && !phoneMatch) return false;
+                }
+                return true;
+            });
+
+            // 1. Desktop Table Rendering
+            const tbody = document.getElementById('queue-table-body');
+            if (filteredQueue.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 24px;">No matching customers in queue</td></tr>`;
+            } else {
+                tbody.innerHTML = filteredQueue.map((ticket, index) => {
+                    const baseUrl = (window.location.protocol === 'file:' || !window.location.origin || window.location.origin === 'null') ? 'http://localhost:3000' : window.location.origin;
+                    const directUrl = `${baseUrl}/index.html?ticket=${encodeURIComponent(ticket.id)}`;
+                    const isFirst = index === 0;
+                    const isLast = index === filteredQueue.length - 1;
+                    let statusBadgeClass = `badge badge-${ticket.status}`;
+                    let displayStatus = ticket.status === 'called' ? 'started' : ticket.status;
+
+                    let statusButtons = '';
+                    if (ticket.status === 'waiting') {
+                        statusButtons = `<button class="btn-action" onclick="setTicketStatus('${ticket.id}', 'called')" title="Start Customer">▶</button>`;
+                    } else if (ticket.status === 'called') {
+                        statusButtons = `<button class="btn-action success" onclick="setTicketStatus('${ticket.id}', 'done')" title="Complete Customer">✔</button>`;
+                    } else {
+                        statusButtons = `<button class="btn-action" style="visibility: hidden; pointer-events: none;">✔</button>`;
+                    }
+
+                    let trackingButtons = '';
+                    if (ticket.status === 'waiting' || ticket.status === 'called') {
+                        const isTrackingThis = locationActive && (trackingTicketId === ticket.id);
+                        if (isTrackingThis) {
+                            trackingButtons = `<button class="btn-action danger" onclick="stopLocationSharing()" title="Stop Location Tracking">🛑</button>`;
+                        } else {
+                            trackingButtons = `<button class="btn-action info" onclick="startLocationSharing('${ticket.id}')" title="Start Location Tracking">📡</button>`;
+                        }
+                    } else {
+                        trackingButtons = `<button class="btn-action" style="visibility: hidden; pointer-events: none;">📡</button>`;
+                    }
+
+                    let deleteButton = `<button class="btn-action danger" onclick="deleteTicket('${ticket.id}')" title="Delete Ticket">🗑</button>`;
+                    let requeueButton = '';
+                    if (ticket.status === 'called' || ticket.status === 'done') {
+                        requeueButton = `<button class="btn-action secondary" onclick="setTicketStatus('${ticket.id}', 'waiting')" title="Re-queue Customer">↺</button>`;
+                    } else {
+                        requeueButton = `<button class="btn-action secondary" style="visibility: hidden; pointer-events: none;">↺</button>`;
+                    }
+
+                    return `
+                        <tr class="queue-row">
+                            <td data-label="Order">
+                                <div style="display: flex; gap: 4px; align-items: center; justify-content: center;">
+                                    <button class="btn-icon-sm" onclick="reorderTicket('${ticket.id}', 'up')" ${isFirst ? 'disabled style="opacity:0.25; cursor:not-allowed;"' : ''} title="Move Up">▲</button>
+                                    <button class="btn-icon-sm" onclick="reorderTicket('${ticket.id}', 'down')" ${isLast ? 'disabled style="opacity:0.25; cursor:not-allowed;"' : ''} title="Move Down">▼</button>
+                                </div>
+                            </td>
+                            <td data-label="Name">
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <input type="text" class="inline-edit-input" value="${escapeHtml(ticket.name)}" placeholder="Name" onchange="updateCustomerDetails('${ticket.id}', this.value, null)" onkeydown="if(event.key === 'Enter') this.blur()"/>
+                                    <input type="tel" class="inline-edit-input phone-input" value="${escapeHtml(ticket.phone || '')}" placeholder="No Phone" onchange="updateCustomerDetails('${ticket.id}', null, this.value)" onkeydown="if(event.key === 'Enter') this.blur()"/>
+                                </div>
+                            </td>
+                            <td data-label="Status"><span class="${statusBadgeClass}">${displayStatus}</span></td>
+                            <td data-label="Share Link">
+                                <div class="share-cell">
+                                    <a class="btn-action-text info" href="${directUrl}" target="_blank" title="Open Customer Link">Open Link ↗</a>
+                                    <button class="btn-action-text secondary" onclick="copyToClipboard('${directUrl}', this)" title="Copy Link to Clipboard">Copy Link</button>
+                                    ${ticket.phone ? `<a class="btn-action-text info" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.3); color: #818cf8;" href="sms:${ticket.phone}?body=${encodeURIComponent(`Track your position in line here: ${directUrl}`)}" title="Send SMS">SMS</a>` : ''}
+                                </div>
+                            </td>
+                            <td data-label="Actions">
+                                <div class="actions-cell">
+                                    ${statusButtons}
+                                    ${trackingButtons}
+                                    ${deleteButton}
+                                    ${requeueButton}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
             }
 
-            tbody.innerHTML = sortedData.map((ticket, index) => {
-                const baseUrl = (window.location.protocol === 'file:' || !window.location.origin || window.location.origin === 'null') ? 'http://localhost:3000' : window.location.origin;
-                const directUrl = `${baseUrl}/index.html?ticket=${encodeURIComponent(ticket.id)}`;
-                let statusBadgeClass = `badge badge-${ticket.status}`;
-                let displayStatus = ticket.status === 'called' ? 'started' : ticket.status;
-                const isFirst = index === 0;
-                const isLast = index === sortedData.length - 1;
-                
-                // 1. Status Actions (Slot 1)
-                let statusButtons = '';
-                if (ticket.status === 'waiting') {
-                    statusButtons = `<button class="btn-action" onclick="setTicketStatus('${ticket.id}', 'called')" title="Start Customer">▶</button>`;
-                } else if (ticket.status === 'called') {
-                    statusButtons = `<button class="btn-action success" onclick="setTicketStatus('${ticket.id}', 'done')" title="Complete Customer">✔</button>`;
-                } else {
-                    // Blank space holder for completed/cancelled tickets
-                    statusButtons = `<button class="btn-action" style="visibility: hidden; pointer-events: none;">✔</button>`;
-                }
+            // 2. Mobile Accordion Card View Rendering (iPhone 15 & Mobile screens)
+            const mobileContainer = document.getElementById('mobile-cards-list');
+            if (filteredQueue.length === 0) {
+                mobileContainer.innerHTML = `<div style="text-align: center; color: var(--text-secondary); padding: 24px; background: rgba(15, 23, 42, 0.4); border-radius: 12px; border: 1px solid var(--panel-border);">No matching customers in queue</div>`;
+            } else {
+                mobileContainer.innerHTML = filteredQueue.map((ticket, index) => {
+                    const baseUrl = (window.location.protocol === 'file:' || !window.location.origin || window.location.origin === 'null') ? 'http://localhost:3000' : window.location.origin;
+                    const directUrl = `${baseUrl}/index.html?ticket=${encodeURIComponent(ticket.id)}`;
+                    const isExpanded = expandedTickets.has(ticket.id);
+                    const isFirst = index === 0;
+                    const isLast = index === filteredQueue.length - 1;
+                    let statusBadgeClass = `badge badge-${ticket.status}`;
+                    let displayStatus = ticket.status === 'called' ? 'started' : ticket.status;
 
-                // 2. Tracking Actions (Slot 2)
-                let trackingButtons = '';
-                if (ticket.status === 'waiting' || ticket.status === 'called') {
-                    const isTrackingThis = locationActive && (trackingTicketId === ticket.id);
-                    if (isTrackingThis) {
-                        trackingButtons = `<button class="btn-action danger" onclick="stopLocationSharing()" title="Stop Location Tracking">🛑</button>`;
+                    // Primary Quick Action Button on Mobile Header (44px target)
+                    let quickActionBtn = '';
+                    if (ticket.status === 'waiting') {
+                        quickActionBtn = `<button class="mobile-quick-btn" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white;" onclick="event.stopPropagation(); setTicketStatus('${ticket.id}', 'called')">▶ Start</button>`;
+                    } else if (ticket.status === 'called') {
+                        quickActionBtn = `<button class="mobile-quick-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;" onclick="event.stopPropagation(); setTicketStatus('${ticket.id}', 'done')">✔ Done</button>`;
                     } else {
-                        trackingButtons = `<button class="btn-action info" onclick="startLocationSharing('${ticket.id}')" title="Start Location Tracking">📡</button>`;
+                        quickActionBtn = `<button class="mobile-quick-btn secondary" style="background: rgba(255,255,255,0.06); color: var(--text-primary);" onclick="event.stopPropagation(); setTicketStatus('${ticket.id}', 'waiting')">↺ Requeue</button>`;
                     }
-                } else {
-                    // Blank space holder for completed tickets
-                    trackingButtons = `<button class="btn-action" style="visibility: hidden; pointer-events: none;">📡</button>`;
-                }
 
-                // 3. Delete Action (Slot 3) - Always visible
-                let deleteButton = `<button class="btn-action danger" onclick="deleteTicket('${ticket.id}')" title="Delete Ticket">🗑</button>`;
+                    // Live GPS Tracking Button inside expanded drawer
+                    const isTrackingThis = locationActive && (trackingTicketId === ticket.id);
+                    let trackingBtn = '';
+                    if (ticket.status === 'waiting' || ticket.status === 'called') {
+                        if (isTrackingThis) {
+                            trackingBtn = `<button class="btn-action-text mobile-btn-full" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border-color: rgba(239, 68, 68, 0.4);" onclick="stopLocationSharing()">🛑 Stop Track</button>`;
+                        } else {
+                            trackingBtn = `<button class="btn-action-text mobile-btn-full info" onclick="startLocationSharing('${ticket.id}')">📡 Share Location</button>`;
+                        }
+                    }
 
-                // 4. Re-queue Action (Slot 4)
-                let requeueButton = '';
-                if (ticket.status === 'called' || ticket.status === 'done') {
-                    requeueButton = `<button class="btn-action secondary" onclick="setTicketStatus('${ticket.id}', 'waiting')" title="Re-queue Customer">↺</button>`;
-                } else {
-                    // Blank space holder for waiting tickets
-                    requeueButton = `<button class="btn-action secondary" style="visibility: hidden; pointer-events: none;">↺</button>`;
-                }
-
-                const actionsHtml = `
-                    <div class="actions-cell">
-                        ${statusButtons}
-                        ${trackingButtons}
-                        ${deleteButton}
-                        ${requeueButton}
-                    </div>
-                `;
-
-                return `
-                    <tr class="queue-row">
-                        <td data-label="Order">
-                            <div style="display: flex; gap: 4px; align-items: center; justify-content: center;">
-                                <button class="btn-icon-sm" onclick="reorderTicket('${ticket.id}', 'up')" ${isFirst ? 'disabled style="opacity:0.25; cursor:not-allowed;"' : ''} title="Move Up">▲</button>
-                                <button class="btn-icon-sm" onclick="reorderTicket('${ticket.id}', 'down')" ${isLast ? 'disabled style="opacity:0.25; cursor:not-allowed;"' : ''} title="Move Down">▼</button>
+                    return `
+                        <div class="mobile-card ${isExpanded ? 'expanded' : ''}">
+                            <!-- Mobile Header: High density summary row (~60px height) -->
+                            <div class="mobile-card-header" onclick="toggleExpandCard('${ticket.id}', event)">
+                                <div class="mobile-card-main">
+                                    <div class="mobile-order-num">#${index + 1}</div>
+                                    <div class="mobile-info">
+                                        <div class="mobile-name">${escapeHtml(ticket.name)}</div>
+                                        <div class="mobile-phone-sub">
+                                            <span>${escapeHtml(ticket.phone || 'No Phone')}</span>
+                                            <span class="${statusBadgeClass}" style="font-size:0.65rem; padding:2px 8px; margin-left:2px;">${displayStatus}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mobile-actions-quick">
+                                    ${quickActionBtn}
+                                    <button class="mobile-expand-toggle ${isExpanded ? 'rotated' : ''}" onclick="toggleExpandCard('${ticket.id}', event)">▼</button>
+                                </div>
                             </div>
-                        </td>
-                        <td data-label="Name">
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <input type="text" class="inline-edit-input" value="${escapeHtml(ticket.name)}" placeholder="Name" onchange="updateCustomerDetails('${ticket.id}', this.value, null)" onkeydown="if(event.key === 'Enter') this.blur()"/>
-                                <input type="tel" class="inline-edit-input phone-input" value="${escapeHtml(ticket.phone || '')}" placeholder="No Phone" onchange="updateCustomerDetails('${ticket.id}', null, this.value)" onkeydown="if(event.key === 'Enter') this.blur()"/>
-                            </div>
-                        </td>
-                        <td data-label="Status"><span class="${statusBadgeClass}">${displayStatus}</span></td>
-                        <td data-label="Share Link">
-                            <div class="share-cell" style="display: flex; gap: 6px; align-items: center;">
-                                <a class="btn-action-text info" href="${directUrl}" target="_blank" title="Open Customer Link">Open Link ↗</a>
-                                <button class="btn-action-text secondary" onclick="copyToClipboard('${directUrl}', this)" title="Copy Link to Clipboard">Copy Link</button>
-                                ${ticket.phone ? `
-                                    <a class="btn-action-text info" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.3); color: #818cf8;" href="sms:${ticket.phone}?body=${encodeURIComponent(`Track your position in line here: ${directUrl}`)}" title="Send SMS Link">SMS</a>
-                                ` : ''}
-                            </div>
-                        </td>
-                        <td data-label="Actions">
-                            ${actionsHtml}
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+
+                            <!-- Mobile Expanded Accordion Drawer -->
+                            ${isExpanded ? `
+                                <div class="mobile-card-drawer">
+                                    <div class="drawer-section">
+                                        <div class="drawer-label">Customer Links & Contact</div>
+                                        <div class="drawer-row">
+                                            <a class="btn-action-text mobile-btn-full info" href="${directUrl}" target="_blank">Open Link ↗</a>
+                                            <button class="btn-action-text mobile-btn-full secondary" onclick="copyToClipboard('${directUrl}', this)">Copy Link 📋</button>
+                                            ${ticket.phone ? `<a class="btn-action-text mobile-btn-full info" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.3); color: #818cf8;" href="sms:${ticket.phone}?body=${encodeURIComponent(`Track your position in line here: ${directUrl}`)}">SMS 💬</a>` : ''}
+                                        </div>
+                                    </div>
+
+                                    ${trackingBtn ? `
+                                        <div class="drawer-section">
+                                            <div class="drawer-label">Live GPS Stream</div>
+                                            <div class="drawer-row">${trackingBtn}</div>
+                                        </div>
+                                    ` : ''}
+
+                                    <div class="drawer-section">
+                                        <div class="drawer-label">Edit Name & Phone</div>
+                                        <div class="drawer-row" style="gap:6px;">
+                                            <input type="text" class="inline-edit-input" style="flex:1; max-width:100%; font-size:16px; background:rgba(15,23,42,0.8); border:1px solid var(--panel-border); padding:8px 12px;" value="${escapeHtml(ticket.name)}" placeholder="Name" onchange="updateCustomerDetails('${ticket.id}', this.value, null)" onkeydown="if(event.key === 'Enter') this.blur()"/>
+                                            <input type="tel" class="inline-edit-input" style="flex:1; max-width:100%; font-size:16px; background:rgba(15,23,42,0.8); border:1px solid var(--panel-border); padding:8px 12px;" value="${escapeHtml(ticket.phone || '')}" placeholder="Phone" onchange="updateCustomerDetails('${ticket.id}', null, this.value)" onkeydown="if(event.key === 'Enter') this.blur()"/>
+                                        </div>
+                                    </div>
+
+                                    <div class="drawer-section">
+                                        <div class="drawer-label">Queue Management</div>
+                                        <div class="drawer-row">
+                                            <button class="btn-action-text mobile-btn-full secondary" onclick="reorderTicket('${ticket.id}', 'up')" ${isFirst ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''}>▲ Move Up</button>
+                                            <button class="btn-action-text mobile-btn-full secondary" onclick="reorderTicket('${ticket.id}', 'down')" ${isLast ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''}>▼ Move Down</button>
+                                            <button class="btn-action-text mobile-btn-full danger" onclick="deleteTicket('${ticket.id}')">🗑 Delete Ticket</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
         }
 
         async function deleteTicket(id) {
@@ -1138,7 +1301,6 @@
             }
         }
 
-
         async function setTicketStatus(id, status) {
             try {
                 const response = await fetch(`/api/admin/status?passcode=${encodeURIComponent(passcode)}`, {
@@ -1173,7 +1335,6 @@
             }
         }
 
-        // Live Location toggling
         function toggleLocation() {
             if (locationActive) {
                 stopLocationSharing();
@@ -1195,10 +1356,8 @@
             trackingTicketId = ticketId || null;
             locationActive = true;
 
-            // Rerender immediately to show "Stop Track" on the clicked row without waiting for GPS response
             renderQueue();
 
-            // If GPS watcher is already running, just update the target ticket and send current coords
             if (watchId !== null) {
                 if (trackingTicketId) {
                     statusText.innerText = `Sharing active for #${trackingTicketId} (Lat: ${currentLat ? currentLat.toFixed(4) : '?'}, Lng: ${currentLng ? currentLng.toFixed(4) : '?'})`;
@@ -1212,10 +1371,8 @@
             toggleBtn.disabled = true;
             statusText.innerText = "Requesting GPS permissions...";
 
-            // Inform server immediately that tracking is turned on (even if coordinates are pending)
             sendLocationToServer(null, null, true, trackingTicketId);
 
-            // Start native browser watchPosition
             // ponytail: high accuracy location tracking using native browser geolocation
             watchId = navigator.geolocation.watchPosition(
                 async (position) => {
@@ -1236,7 +1393,6 @@
                         statusText.innerText = `Sharing active globally (Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)})`;
                     }
 
-                    // Send location to server
                     await sendLocationToServer(lat, lng, true, trackingTicketId);
                 },
                 (error) => {
@@ -1276,10 +1432,7 @@
             dot.className = "status-dot inactive";
             statusText.innerText = "Location Sharing is Offline";
 
-            // Notify server location is offline
             await sendLocationToServer(null, null, false, null);
-            
-            // Reload local UI lists to update button states immediately
             renderQueue();
         }
 
