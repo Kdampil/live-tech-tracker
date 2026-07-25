@@ -437,8 +437,8 @@
                     const aheadCount = data.position ? (hasActiveServing ? data.position : data.position - 1) : 0;
                     
                     if (aheadCount === 0) {
-                        positionEl.innerText = 'NEXT';
-                        estimateTextEl.innerText = 'You are the next person!';
+                        positionEl.innerText = 'WAITING';
+                        estimateTextEl.innerText = 'Waiting for service to start';
                         positionEl.style.fontSize = '2.2rem';
                     } else {
                         positionEl.innerText = aheadCount;
