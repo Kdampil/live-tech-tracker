@@ -1007,21 +1007,30 @@
                 if (response.status === 401) {
                     passcode = '';
                     localStorage.removeItem('admin_passcode');
-                    if (!isInitialLoad) {
-                        document.getElementById('login-error').innerText = "Incorrect Passcode. Please try again.";
-                        document.getElementById('login-error').classList.remove('hidden');
-                    } else {
-                        document.getElementById('login-error').classList.add('hidden');
+                    const errEl = document.getElementById('login-error');
+                    if (errEl) {
+                        if (!isInitialLoad) {
+                            errEl.innerText = "Incorrect Passcode. Please try again.";
+                            errEl.classList.remove('hidden');
+                            errEl.style.display = 'block';
+                        } else {
+                            errEl.classList.add('hidden');
+                            errEl.style.display = 'none';
+                        }
                     }
-                    document.getElementById('passcode-view').classList.remove('hidden');
-                    document.getElementById('admin-view').classList.add('hidden');
+                    const passView = document.getElementById('passcode-view');
+                    const adminView = document.getElementById('admin-view');
+                    if (passView) { passView.classList.remove('hidden'); passView.style.display = 'block'; }
+                    if (adminView) { adminView.classList.add('hidden'); adminView.style.display = 'none'; }
                     return;
                 }
-                if (!response.ok) throw new Error('Request failed');
+                if (!response.ok) throw new Error('Server returned HTTP ' + response.status);
                 
                 localStorage.setItem('admin_passcode', passcode);
-                document.getElementById('passcode-view').classList.add('hidden');
-                document.getElementById('admin-view').classList.remove('hidden');
+                const passView = document.getElementById('passcode-view');
+                const adminView = document.getElementById('admin-view');
+                if (passView) { passView.classList.add('hidden'); passView.style.display = 'none'; }
+                if (adminView) { adminView.classList.remove('hidden'); adminView.style.display = 'block'; }
                 
                 const url = new URL(window.location.href);
                 if (url.searchParams.has('passcode')) {
@@ -1035,6 +1044,7 @@
 
             } catch (err) {
                 console.error('Verify error:', err);
+                alert('Connection Error: ' + err.message);
             }
         }
 
