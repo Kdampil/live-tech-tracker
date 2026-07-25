@@ -779,15 +779,15 @@
     <div id="passcode-view" class="container passcode-view">
         <h1>Admin Login</h1>
         <p class="subtitle" style="margin-bottom: 20px;">Enter administrative passcode to manage queue</p>
-        <form class="card no-ticket-form" id="passcode-form" onsubmit="event.preventDefault(); login();" style="display: flex; flex-direction: column; gap: 14px;">
-            <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width: 100%;" />
+        <div class="card no-ticket-form" id="passcode-form" style="display: flex; flex-direction: column; gap: 14px;">
+            <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter') login();" style="width: 100%;" />
             <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--text-secondary); cursor: pointer; user-select: none;">
                 <input type="checkbox" id="show-passcode-checkbox" onchange="togglePasscodeVisibility(this.checked)" style="width: auto; min-width: 0; cursor: pointer;" />
                 Show Passcode
             </label>
-            <button type="submit" id="login-submit-btn" style="touch-action: manipulation; margin-top: 4px;">Access Dashboard</button>
+            <button type="button" id="login-submit-btn" onclick="login()" style="touch-action: manipulation; margin-top: 4px;">Access Dashboard</button>
             <p id="login-error" style="color: var(--accent-danger); font-size: 0.88rem; font-weight: 600; margin-top: 4px;" class="hidden">Incorrect Passcode. Please try again.</p>
-        </form>
+        </div>
     </div>
 
     <!-- Admin Main View -->
