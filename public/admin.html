@@ -779,10 +779,13 @@
     <div id="passcode-view" class="container passcode-view">
         <h1>Admin Login</h1>
         <p class="subtitle" style="margin-bottom: 20px;">Enter administrative passcode to manage queue</p>
-        <form class="card no-ticket-form" onsubmit="event.preventDefault(); login();">
-            <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="current-password" />
-            <button type="submit" style="touch-action: manipulation;">Access Dashboard</button>
-            <p id="login-error" style="color: var(--accent-danger); font-size: 0.85rem; margin-top: 5px;" class="hidden">Invalid Passcode</p>
+        <form class="card no-ticket-form" onsubmit="event.preventDefault(); login();" style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="position: relative; width: 100%;">
+                <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="current-password" style="width: 100%; padding-right: 46px;" />
+                <button type="button" onclick="togglePasswordVisibility()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; box-shadow: none; padding: 6px; color: var(--text-secondary); cursor: pointer; min-height: auto; font-size: 1rem;" title="Show/Hide Password">👁️</button>
+            </div>
+            <button type="submit" id="login-submit-btn" style="touch-action: manipulation;">Access Dashboard</button>
+            <p id="login-error" style="color: var(--accent-danger); font-size: 0.88rem; font-weight: 600; margin-top: 4px;" class="hidden">Invalid Passcode. Please check your password and try again.</p>
         </form>
     </div>
 
@@ -936,12 +939,41 @@
             }
         });
 
-        function login() {
-            const inputVal = document.getElementById('passcode-input').value.trim();
-            if (inputVal) {
-                passcode = inputVal;
-                document.getElementById('login-error').classList.add('hidden');
-                verifyAccess(false);
+        function togglePasswordVisibility() {
+            const input = document.getElementById('passcode-input');
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        }
+
+        async function login() {
+            const inputEl = document.getElementById('passcode-input');
+            const submitBtn = document.getElementById('login-submit-btn');
+            const errorEl = document.getElementById('login-error');
+            
+            const inputVal = inputEl.value.trim();
+            if (!inputVal) {
+                errorEl.innerText = "Please enter a passcode.";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            passcode = inputVal;
+            errorEl.classList.add('hidden');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = "Verifying...";
+            }
+
+            try {
+                await verifyAccess(false);
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Access Dashboard";
+                }
             }
         }
 
