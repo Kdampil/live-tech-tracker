@@ -1045,9 +1045,10 @@
                 if (!response.ok) throw new Error('Failed to load queue');
                 const data = await response.json();
                 
-                const selectedDate = document.getElementById('filter-date').value;
+                const filterDateEl = document.getElementById('filter-date');
+                const selectedDate = filterDateEl ? filterDateEl.value : new Date().toLocaleDateString('en-CA');
                 
-                queueData = data.queue.filter(ticket => {
+                queueData = (data.queue || []).filter(ticket => {
                     const ticketDate = ticket.date || new Date(ticket.timestamp).toLocaleDateString('en-CA');
                     return ticketDate === selectedDate;
                 });
