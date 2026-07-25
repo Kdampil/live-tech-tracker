@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Queue Admin Dashboard</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -595,6 +595,18 @@
                 flex-wrap: wrap;
                 justify-content: flex-end;
                 gap: 6px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            input, select, textarea, .inline-edit-input, .phone-input {
+                font-size: 16px !important; /* Prevents Safari dynamic zoom lock on inputs */
+            }
+            body {
+                padding-top: calc(20px + env(safe-area-inset-top)) !important;
+                padding-bottom: calc(20px + env(safe-area-inset-bottom)) !important;
+                padding-left: calc(10px + env(safe-area-inset-left)) !important;
+                padding-right: calc(10px + env(safe-area-inset-right)) !important;
             }
         }
     </style>
