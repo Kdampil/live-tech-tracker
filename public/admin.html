@@ -943,11 +943,14 @@
                         e.preventDefault();
                         e.stopPropagation();
                     }
-                    if (passcodeInp.type === 'password') {
+                    const isPassword = passcodeInp.type === 'password' || passcodeInp.style.webkitTextSecurity === 'disc';
+                    if (isPassword) {
                         passcodeInp.type = 'text';
+                        passcodeInp.style.webkitTextSecurity = 'none';
                         toggleBtn.innerText = 'Hide';
                     } else {
                         passcodeInp.type = 'password';
+                        passcodeInp.style.webkitTextSecurity = 'disc';
                         toggleBtn.innerText = 'Show';
                     }
                 };
