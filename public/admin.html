@@ -780,13 +780,14 @@
         <h1>Admin Login</h1>
         <p class="subtitle" style="margin-bottom: 20px;">Enter administrative passcode to manage queue</p>
         <div class="card no-ticket-form" id="passcode-form" style="display: flex; flex-direction: column; gap: 14px;">
-            <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter') login();" style="width: 100%;" />
+            <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter') login();" oninput="checkAutoLogin(this.value)" style="width: 100%;" />
             <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--text-secondary); cursor: pointer; user-select: none;">
                 <input type="checkbox" id="show-passcode-checkbox" onchange="togglePasscodeVisibility(this.checked)" style="width: auto; min-width: 0; cursor: pointer;" />
                 Show Passcode
             </label>
             <button type="button" id="login-submit-btn" onclick="login()" style="touch-action: manipulation; margin-top: 4px;">Access Dashboard</button>
             <p id="login-error" style="color: var(--accent-danger); font-size: 0.88rem; font-weight: 600; margin-top: 4px;" class="hidden">Incorrect Passcode. Please try again.</p>
+            <p id="login-status-log" style="color: var(--accent-cyan); font-size: 0.82rem; font-family: monospace; margin-top: 6px; word-break: break-all;" class="hidden"></p>
         </div>
     </div>
 
@@ -935,6 +936,13 @@
 
         let passcode = new URLSearchParams(window.location.search).get('passcode') || localStorage.getItem('admin_passcode') || '';
 
+        function checkAutoLogin(val) {
+            const v = (val || '').trim().toLowerCase();
+            if (v === 'kit120688' || v === 'admin123') {
+                login();
+            }
+        }
+
         function togglePasscodeVisibility(isChecked) {
             const input = document.getElementById('passcode-input');
             if (!input) return;
@@ -958,16 +966,28 @@
             const inputEl = document.getElementById('passcode-input');
             const submitBtn = document.getElementById('login-submit-btn');
             const errorEl = document.getElementById('login-error');
+            const logEl = document.getElementById('login-status-log');
             
-            const inputVal = inputEl.value.trim();
+            const inputVal = inputEl ? inputEl.value.trim() : '';
             if (!inputVal) {
-                errorEl.innerText = "Please enter a passcode.";
-                errorEl.classList.remove('hidden');
+                if (errorEl) {
+                    errorEl.innerText = "Please enter a passcode.";
+                    errorEl.classList.remove('hidden');
+                    errorEl.style.display = 'block';
+                }
                 return;
             }
 
             passcode = inputVal;
-            errorEl.classList.add('hidden');
+            if (errorEl) {
+                errorEl.classList.add('hidden');
+                errorEl.style.display = 'none';
+            }
+            if (logEl) {
+                logEl.innerText = `Connecting to server with passcode "${inputVal}"...`;
+                logEl.classList.remove('hidden');
+                logEl.style.display = 'block';
+            }
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.innerText = "Verifying...";
@@ -975,6 +995,9 @@
 
             try {
                 await verifyAccess(false);
+            } catch (e) {
+                console.error('Login error:', e);
+                if (logEl) logEl.innerText = `Login Error: ${e.message}`;
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
@@ -995,14 +1018,23 @@
             }
             
             clearInterval(updateInterval);
-            document.getElementById('admin-view').classList.add('hidden');
-            document.getElementById('passcode-view').classList.remove('hidden');
-            document.getElementById('login-error').classList.add('hidden');
+            const passView = document.getElementById('passcode-view');
+            const adminView = document.getElementById('admin-view');
+            if (passView) { passView.classList.remove('hidden'); passView.style.display = 'block'; }
+            if (adminView) { adminView.classList.add('hidden'); adminView.style.display = 'none'; }
+            
+            const errEl = document.getElementById('login-error');
+            const logEl = document.getElementById('login-status-log');
+            if (errEl) errEl.classList.add('hidden');
+            if (logEl) logEl.classList.add('hidden');
             document.getElementById('passcode-input').value = '';
         }
 
         async function verifyAccess(isInitialLoad = false) {
+            const logEl = document.getElementById('login-status-log');
             try {
+                if (logEl && !isInitialLoad) logEl.innerText = `Sending POST /api/admin/verify...`;
+                
                 const response = await fetch('/api/admin/verify', {
                     method: 'POST',
                     headers: { 
@@ -1011,6 +1043,7 @@
                     },
                     body: JSON.stringify({ passcode })
                 });
+
                 if (response.status === 401) {
                     passcode = '';
                     localStorage.removeItem('admin_passcode');
@@ -1025,15 +1058,23 @@
                             errEl.style.display = 'none';
                         }
                     }
+                    if (logEl && !isInitialLoad) logEl.innerText = `Server returned 401 Unauthorized`;
+                    
                     const passView = document.getElementById('passcode-view');
                     const adminView = document.getElementById('admin-view');
                     if (passView) { passView.classList.remove('hidden'); passView.style.display = 'block'; }
                     if (adminView) { adminView.classList.add('hidden'); adminView.style.display = 'none'; }
                     return;
                 }
+                
                 if (!response.ok) throw new Error('Server returned HTTP ' + response.status);
                 
+                if (logEl) logEl.innerText = `Success (HTTP 200)! Opening dashboard...`;
                 localStorage.setItem('admin_passcode', passcode);
+                
+                const inputEl = document.getElementById('passcode-input');
+                if (inputEl) inputEl.blur();
+                
                 const passView = document.getElementById('passcode-view');
                 const adminView = document.getElementById('admin-view');
                 if (passView) { passView.classList.add('hidden'); passView.style.display = 'none'; }
@@ -1051,7 +1092,7 @@
 
             } catch (err) {
                 console.error('Verify error:', err);
-                alert('Connection Error: ' + err.message);
+                if (logEl) logEl.innerText = `Network Error: ${err.message}`;
             }
         }
 
