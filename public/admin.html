@@ -775,13 +775,29 @@
 </head>
 <body>
 
+    <!-- Passcode Authenticator View -->
+    <div id="passcode-view" class="container passcode-view">
+        <h1>Admin Login</h1>
+        <p class="subtitle" style="margin-bottom: 20px;">Enter administrative passcode to manage queue</p>
+        <form class="card no-ticket-form" id="passcode-form" onsubmit="event.preventDefault(); login();" style="display: flex; flex-direction: column; gap: 14px;">
+            <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width: 100%;" />
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--text-secondary); cursor: pointer; user-select: none;">
+                <input type="checkbox" id="show-passcode-checkbox" onchange="togglePasscodeVisibility(this.checked)" style="width: auto; min-width: 0; cursor: pointer;" />
+                Show Passcode
+            </label>
+            <button type="submit" id="login-submit-btn" style="touch-action: manipulation; margin-top: 4px;">Access Dashboard</button>
+            <p id="login-error" style="color: var(--accent-danger); font-size: 0.88rem; font-weight: 600; margin-top: 4px;" class="hidden">Incorrect Passcode. Please try again.</p>
+        </form>
+    </div>
+
     <!-- Admin Main View -->
-    <div id="admin-view" class="container">
+    <div id="admin-view" class="container hidden">
         <div class="header">
             <div>
                 <h1>Dashboard</h1>
                 <p class="subtitle" style="margin-bottom: 0;">Queue & Location Control Center</p>
             </div>
+            <button class="secondary" onclick="logout()">Logout</button>
         </div>
 
         <div class="grid-3">
@@ -917,16 +933,115 @@
             }
         });
 
+        let passcode = new URLSearchParams(window.location.search).get('passcode') || localStorage.getItem('admin_passcode') || '';
+
+        function togglePasscodeVisibility(isChecked) {
+            const input = document.getElementById('passcode-input');
+            if (!input) return;
+            if (isChecked) {
+                input.type = 'text';
+                input.style.webkitTextSecurity = 'none';
+            } else {
+                input.type = 'password';
+                input.style.webkitTextSecurity = 'disc';
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('filter-date').value = new Date().toLocaleDateString('en-CA');
-            loadData();
-            clearInterval(updateInterval);
-            updateInterval = setInterval(loadData, 3000);
+            if (passcode) {
+                verifyAccess(true);
+            }
         });
+
+        async function login() {
+            const inputEl = document.getElementById('passcode-input');
+            const submitBtn = document.getElementById('login-submit-btn');
+            const errorEl = document.getElementById('login-error');
+            
+            const inputVal = inputEl.value.trim();
+            if (!inputVal) {
+                errorEl.innerText = "Please enter a passcode.";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            passcode = inputVal;
+            errorEl.classList.add('hidden');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = "Verifying...";
+            }
+
+            try {
+                await verifyAccess(false);
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Access Dashboard";
+                }
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('admin_passcode');
+            passcode = '';
+            const url = new URL(window.location.href);
+            url.searchParams.delete('passcode');
+            window.history.replaceState({}, '', url.pathname);
+            
+            if (locationActive) {
+                stopLocationSharing();
+            }
+            
+            clearInterval(updateInterval);
+            document.getElementById('admin-view').classList.add('hidden');
+            document.getElementById('passcode-view').classList.remove('hidden');
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('passcode-input').value = '';
+        }
+
+        async function verifyAccess(isInitialLoad = false) {
+            try {
+                const response = await fetch(`/api/admin/queue?passcode=${encodeURIComponent(passcode)}`);
+                if (response.status === 401) {
+                    passcode = '';
+                    localStorage.removeItem('admin_passcode');
+                    if (!isInitialLoad) {
+                        document.getElementById('login-error').innerText = "Incorrect Passcode. Please try again.";
+                        document.getElementById('login-error').classList.remove('hidden');
+                    } else {
+                        document.getElementById('login-error').classList.add('hidden');
+                    }
+                    document.getElementById('passcode-view').classList.remove('hidden');
+                    document.getElementById('admin-view').classList.add('hidden');
+                    return;
+                }
+                if (!response.ok) throw new Error('Request failed');
+                
+                localStorage.setItem('admin_passcode', passcode);
+                document.getElementById('passcode-view').classList.add('hidden');
+                document.getElementById('admin-view').classList.remove('hidden');
+                
+                const url = new URL(window.location.href);
+                if (url.searchParams.has('passcode')) {
+                    url.searchParams.delete('passcode');
+                    window.history.replaceState({}, '', url.pathname);
+                }
+
+                loadData();
+                clearInterval(updateInterval);
+                updateInterval = setInterval(loadData, 3000);
+
+            } catch (err) {
+                console.error('Verify error:', err);
+            }
+        }
 
         async function loadData() {
             try {
-                const response = await fetch('/api/admin/queue');
+                const response = await fetch(`/api/admin/queue?passcode=${encodeURIComponent(passcode)}`);
+                if (response.status === 401) return logout();
                 if (!response.ok) throw new Error('Failed to load queue');
                 const data = await response.json();
                 
