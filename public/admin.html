@@ -751,11 +751,11 @@
                 document.getElementById('passcode-view').classList.add('hidden');
                 document.getElementById('admin-view').classList.remove('hidden');
                 
-                // Set URL query param if not present to support easy bookmarking
+                // Remove passcode from URL address bar for security
                 const url = new URL(window.location.href);
-                if (url.searchParams.get('passcode') !== passcode) {
-                    url.searchParams.set('passcode', passcode);
-                    window.history.replaceState({}, '', url.search);
+                if (url.searchParams.has('passcode')) {
+                    url.searchParams.delete('passcode');
+                    window.history.replaceState({}, '', url.pathname);
                 }
 
                 loadData();
