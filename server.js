@@ -9,8 +9,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const { Pool } = require('pg');
 // ponytail: server persistent state controller
 
-const DATA_FILE = path.join(__dirname, 'data.json');
-const PASSCODE = (process.env.PASSCODE || 'admin123').trim();
+const PASSCODE = (process.env.PASSCODE || process.env.PASSWORD || process.env.ADMIN_PASSCODE || process.env.passcode || 'admin123').trim();
 
 let state = {
   queue: [],
@@ -88,6 +87,15 @@ function requireAdmin(req, res, next) {
   }
   next();
 }
+
+app.get('/api/admin/passcode-status', (req, res) => {
+  res.json({
+    envKeyPresent: !!(process.env.PASSCODE || process.env.PASSWORD || process.env.ADMIN_PASSCODE || process.env.passcode),
+    passcodeLength: PASSCODE.length,
+    firstChar: PASSCODE ? PASSCODE.charAt(0) : '',
+    lastChar: PASSCODE ? PASSCODE.charAt(PASSCODE.length - 1) : ''
+  });
+});
 
 // Customer Endpoints
 app.get('/api/status', (req, res) => {
