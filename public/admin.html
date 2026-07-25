@@ -972,7 +972,6 @@
                 if (!response.ok) throw new Error('Request failed');
                 
                 localStorage.setItem('admin_passcode', passcode);
-                document.getElementById('passcode-view').classList.hidden = true;
                 document.getElementById('passcode-view').classList.add('hidden');
                 document.getElementById('admin-view').classList.remove('hidden');
                 
