@@ -668,7 +668,7 @@
             }
 
             table, thead, tbody, th, td, tr {
-                display: block; /* Collapse the grid structure */
+                display: block;
             }
 
             thead {
@@ -676,11 +676,18 @@
             }
 
             tr {
-                margin-bottom: 16px;
+                margin-bottom: 8px;
                 border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 12px;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.01);
+                border-radius: 10px;
+                padding: 10px 12px;
+                background: rgba(15, 23, 42, 0.5);
+                display: grid;
+                grid-template-areas: 
+                    "order name status"
+                    "share actions";
+                grid-template-columns: auto 1fr auto;
+                gap: 8px;
+                align-items: center;
             }
 
             tr:last-child {
@@ -688,35 +695,57 @@
             }
 
             td {
-                border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-                padding: 8px 0;
+                border: none !important;
+                padding: 0 !important;
                 display: flex;
-                justify-content: space-between;
                 align-items: center;
                 font-size: 0.9rem;
             }
 
-            td:last-child {
-                border-bottom: none;
-                padding-top: 12px;
+            td[data-label="Order"] {
+                grid-area: order;
             }
 
-            /* Inject row headers using data-label attributes */
-            td::before {
-                content: attr(data-label);
-                font-weight: 600;
-                color: var(--text-secondary);
-                font-size: 0.75rem;
-                text-transform: uppercase;
-                margin-right: 12px;
+            td[data-label="Name"] {
+                grid-area: name;
+                align-items: flex-start;
             }
 
-            /* Redefine actions cell layout inside vertical cards */
-            .actions-cell {
-                width: 100%;
-                display: flex;
+            td[data-label="Status"] {
+                grid-area: status;
                 justify-content: flex-end;
-                gap: 8px !important;
+            }
+
+            td[data-label="Share Link"] {
+                grid-area: share;
+                border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+                padding-top: 8px !important;
+                justify-content: flex-start;
+            }
+
+            td[data-label="Actions"] {
+                grid-area: actions;
+                border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+                padding-top: 8px !important;
+                justify-content: flex-end;
+            }
+
+            /* Hide headers on card elements */
+            td::before {
+                display: none !important;
+            }
+
+            /* Redefine action elements heights and styles */
+            .actions-cell {
+                width: auto;
+                display: flex;
+                gap: 6px !important;
+            }
+
+            .share-cell {
+                width: auto;
+                display: flex;
+                gap: 4px !important;
             }
 
             .copy-input-group {
