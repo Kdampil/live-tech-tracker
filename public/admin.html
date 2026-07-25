@@ -779,10 +779,10 @@
     <div id="passcode-view" class="container passcode-view">
         <h1>Admin Login</h1>
         <p class="subtitle" style="margin-bottom: 20px;">Enter administrative passcode to manage queue</p>
-        <form class="card no-ticket-form" onsubmit="event.preventDefault(); login();" style="display: flex; flex-direction: column; gap: 12px;">
+        <form class="card no-ticket-form" id="passcode-form" onsubmit="event.preventDefault(); login();" style="display: flex; flex-direction: column; gap: 12px;">
             <div style="position: relative; width: 100%; display: flex; align-items: center;">
-                <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width: 100%; padding-right: 48px;" />
-                <span id="toggle-pw-btn" onclick="togglePasswordVisibility(event)" ontouchstart="togglePasswordVisibility(event)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; user-select: none; font-size: 1.2rem; z-index: 10; padding: 10px; touch-action: manipulation;" title="Show/Hide Password">👁️</span>
+                <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width: 100%; padding-right: 74px;" />
+                <button type="button" id="toggle-pw-btn" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.08); border: 1px solid var(--panel-border); border-radius: 6px; padding: 6px 12px; font-size: 0.8rem; font-weight: 600; color: var(--text-primary); cursor: pointer; user-select: none; z-index: 10; min-height: 32px; box-shadow: none; touch-action: manipulation;">Show</button>
             </div>
             <button type="submit" id="login-submit-btn" style="touch-action: manipulation;">Access Dashboard</button>
             <p id="login-error" style="color: var(--accent-danger); font-size: 0.88rem; font-weight: 600; margin-top: 4px;" class="hidden">Invalid Passcode. Please check your password and try again.</p>
@@ -934,27 +934,31 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('filter-date').value = new Date().toLocaleDateString('en-CA');
+            
+            const toggleBtn = document.getElementById('toggle-pw-btn');
+            const passcodeInp = document.getElementById('passcode-input');
+            if (toggleBtn && passcodeInp) {
+                const handleToggle = (e) => {
+                    if (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    if (passcodeInp.type === 'password') {
+                        passcodeInp.type = 'text';
+                        toggleBtn.innerText = 'Hide';
+                    } else {
+                        passcodeInp.type = 'password';
+                        toggleBtn.innerText = 'Show';
+                    }
+                };
+                toggleBtn.addEventListener('click', handleToggle);
+                toggleBtn.addEventListener('touchstart', handleToggle, { passive: false });
+            }
+
             if (passcode) {
                 verifyAccess(true);
             }
         });
-
-        function togglePasswordVisibility(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            const input = document.getElementById('passcode-input');
-            const icon = document.getElementById('toggle-pw-btn');
-            if (!input) return;
-            if (input.type === 'password') {
-                input.type = 'text';
-                if (icon) icon.innerText = '🙈';
-            } else {
-                input.type = 'password';
-                if (icon) icon.innerText = '👁️';
-            }
-        }
 
         async function login() {
             const inputEl = document.getElementById('passcode-input');
