@@ -201,11 +201,11 @@ app.post('/api/admin/status', requireAdmin, (req, res) => {
     }
 
     ticket.status = status; // 'waiting', 'called', 'done', 'cancelled'
-    if (status === 'done' || status === 'cancelled') {
+    if (status !== 'called') {
       if (state.currentServingId === id) {
         state.currentServingId = null;
       }
-      // ponytail: automatically stop location sharing for a customer if their ticket is completed or cancelled
+      // ponytail: automatically stop location sharing if ticket is no longer active
       if (state.location.ticketId === id) {
         state.location.active = false;
         state.location.ticketId = null;
