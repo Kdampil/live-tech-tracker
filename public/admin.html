@@ -900,6 +900,34 @@
         let expandedTickets = new Set();
         let currentStatusFilter = 'all';
         let searchQuery = '';
+        let wakeLock = null;
+
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Screen Wake Lock acquired.');
+                } catch (err) {
+                    console.warn(`Wake Lock error: ${err.name}, ${err.message}`);
+                }
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release().then(() => {
+                    wakeLock = null;
+                    console.log('Screen Wake Lock released.');
+                });
+            }
+        }
+
+        // Re-request wake lock when user switches back to the tab
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                await requestWakeLock();
+            }
+        });
 
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('filter-date').value = new Date().toLocaleDateString('en-CA');
@@ -1371,6 +1399,8 @@
             toggleBtn.disabled = true;
             statusText.innerText = "Requesting GPS permissions...";
 
+            await requestWakeLock();
+
             sendLocationToServer(null, null, true, trackingTicketId);
 
             // ponytail: high accuracy location tracking using native browser geolocation
@@ -1421,6 +1451,8 @@
                 navigator.geolocation.clearWatch(watchId);
                 watchId = null;
             }
+
+            releaseWakeLock();
 
             trackingTicketId = null;
             locationActive = false;
