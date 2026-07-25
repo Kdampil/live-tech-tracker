@@ -780,9 +780,9 @@
         <h1>Admin Login</h1>
         <p class="subtitle" style="margin-bottom: 20px;">Enter administrative passcode to manage queue</p>
         <form class="card no-ticket-form" onsubmit="event.preventDefault(); login();" style="display: flex; flex-direction: column; gap: 12px;">
-            <div style="position: relative; width: 100%;">
-                <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="current-password" style="width: 100%; padding-right: 46px;" />
-                <button type="button" onclick="togglePasswordVisibility()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; box-shadow: none; padding: 6px; color: var(--text-secondary); cursor: pointer; min-height: auto; font-size: 1rem;" title="Show/Hide Password">👁️</button>
+            <div style="position: relative; width: 100%; display: flex; align-items: center;">
+                <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="current-password" style="width: 100%; padding-right: 48px;" />
+                <span id="toggle-pw-btn" onclick="togglePasswordVisibility()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; user-select: none; font-size: 1.2rem; z-index: 10; padding: 6px; touch-action: manipulation;" title="Show/Hide Password">👁️</span>
             </div>
             <button type="submit" id="login-submit-btn" style="touch-action: manipulation;">Access Dashboard</button>
             <p id="login-error" style="color: var(--accent-danger); font-size: 0.88rem; font-weight: 600; margin-top: 4px;" class="hidden">Invalid Passcode. Please check your password and try again.</p>
@@ -941,10 +941,14 @@
 
         function togglePasswordVisibility() {
             const input = document.getElementById('passcode-input');
+            const icon = document.getElementById('toggle-pw-btn');
+            if (!input) return;
             if (input.type === 'password') {
                 input.type = 'text';
+                if (icon) icon.innerText = '🙈';
             } else {
                 input.type = 'password';
+                if (icon) icon.innerText = '👁️';
             }
         }
 
