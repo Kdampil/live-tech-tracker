@@ -7,6 +7,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const { Pool } = require('pg');
+// ponytail: server persistent state controller
 
 const DATA_FILE = path.join(__dirname, 'data.json');
 const PASSCODE = process.env.PASSCODE || 'admin123';
