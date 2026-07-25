@@ -4,21 +4,12 @@ const path = require('path');
 
 const app = express();
 app.use(express.json());
-app.use((req, res, next) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  next();
-});
 app.use(express.static(path.join(__dirname, 'public')));
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
 
 const { Pool } = require('pg');
-// ponytail: server persistent state controller
 
-const PASSCODE = (process.env.PASSCODE || process.env.PASSWORD || process.env.ADMIN_PASSCODE || process.env.passcode || 'admin123').trim();
+const DATA_FILE = path.join(__dirname, 'data.json');
+const PASSCODE = process.env.PASSCODE || 'admin123';
 
 let state = {
   queue: [],
@@ -88,33 +79,14 @@ loadState().then(() => {
   console.log("Database state initialized successfully.");
 });
 
-// Admin passcode middleware (case-insensitive & whitespace tolerant)
+// Admin passcode middleware
 function requireAdmin(req, res, next) {
-  const passcode = (req.query.passcode || (req.body && req.body.passcode) || req.headers['x-passcode'] || '').trim().toLowerCase();
-  const validPasscodes = [
-    PASSCODE,
-    'Kit120688',
-    'admin123'
-  ].map(p => (p || '').trim().toLowerCase()).filter(Boolean);
-
-  if (!validPasscodes.includes(passcode)) {
+  const passcode = req.query.passcode || req.headers['x-passcode'];
+  if (passcode !== PASSCODE) {
     return res.status(401).json({ error: 'Unauthorized: invalid passcode' });
   }
   next();
 }
-
-app.post('/api/admin/verify', requireAdmin, (req, res) => {
-  res.json({ success: true, message: 'Passcode verified successfully' });
-});
-
-app.get('/api/admin/passcode-status', (req, res) => {
-  res.json({
-    envKeyPresent: !!(process.env.PASSCODE || process.env.PASSWORD || process.env.ADMIN_PASSCODE || process.env.passcode),
-    passcodeLength: PASSCODE.length,
-    firstChar: PASSCODE ? PASSCODE.charAt(0) : '',
-    lastChar: PASSCODE ? PASSCODE.charAt(PASSCODE.length - 1) : ''
-  });
-});
 
 // Customer Endpoints
 app.get('/api/status', (req, res) => {

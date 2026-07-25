@@ -779,18 +779,10 @@
     <div id="passcode-view" class="container passcode-view">
         <h1>Admin Login</h1>
         <p class="subtitle" style="margin-bottom: 20px;">Enter administrative passcode to manage queue</p>
-        <div class="card no-ticket-form" id="passcode-form" style="display: flex; flex-direction: column; gap: 14px;">
-            <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter') login();" oninput="checkAutoLogin(this.value)" style="width: 100%;" />
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--text-secondary); cursor: pointer; user-select: none;">
-                <input type="checkbox" id="show-passcode-checkbox" onchange="togglePasscodeVisibility(this.checked)" style="width: auto; min-width: 0; cursor: pointer;" />
-                Show Passcode
-            </label>
-            <button type="button" id="login-submit-btn" onclick="login()" style="touch-action: manipulation; margin-top: 4px;">Access Dashboard</button>
-            <div id="login-error" class="hidden" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 10px 14px; color: #fca5a5; font-size: 0.9rem; font-weight: 600; text-align: center; margin-top: 4px;">
-                ⚠️ Incorrect passcode. Please try again.
-            </div>
-            <p id="login-status-log" style="color: var(--accent-cyan); font-size: 0.82rem; font-family: monospace; margin-top: 6px; word-break: break-all;" class="hidden"></p>
-            <div style="font-size: 0.75rem; color: var(--text-secondary); text-align: center; opacity: 0.6; margin-top: 8px;">v2.4 Live Build</div>
+        <div class="card no-ticket-form">
+            <input type="password" id="passcode-input" placeholder="Passcode" onkeydown="if(event.key === 'Enter') login()" />
+            <button onclick="login()">Access Dashboard</button>
+            <p id="login-error" style="color: var(--accent-danger); font-size: 0.85rem; margin-top: 5px;" class="hidden">Invalid Passcode</p>
         </div>
     </div>
 
@@ -908,115 +900,24 @@
         let expandedTickets = new Set();
         let currentStatusFilter = 'all';
         let searchQuery = '';
-        let wakeLock = null;
-
-        async function requestWakeLock() {
-            if ('wakeLock' in navigator) {
-                try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Screen Wake Lock acquired.');
-                } catch (err) {
-                    console.warn(`Wake Lock error: ${err.name}, ${err.message}`);
-                }
-            }
-        }
-
-        function releaseWakeLock() {
-            if (wakeLock) {
-                wakeLock.release().then(() => {
-                    wakeLock = null;
-                    console.log('Screen Wake Lock released.');
-                });
-            }
-        }
-
-        // Re-request wake lock when user switches back to the tab
-        document.addEventListener('visibilitychange', async () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
-                await requestWakeLock();
-            }
-        });
-
-        let passcode = new URLSearchParams(window.location.search).get('passcode') || localStorage.getItem('admin_passcode') || '';
-
-        function checkAutoLogin(val) {
-            const errEl = document.getElementById('login-error');
-            if (errEl) {
-                errEl.classList.add('hidden');
-                errEl.style.display = 'none';
-            }
-            const v = (val || '').trim().toLowerCase();
-            if (v === 'kit120688' || v === 'admin123') {
-                login();
-            }
-        }
-
-        function togglePasscodeVisibility(isChecked) {
-            const input = document.getElementById('passcode-input');
-            if (!input) return;
-            if (isChecked) {
-                input.type = 'text';
-                input.style.webkitTextSecurity = 'none';
-            } else {
-                input.type = 'password';
-                input.style.webkitTextSecurity = 'disc';
-            }
-        }
 
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('filter-date').value = new Date().toLocaleDateString('en-CA');
             if (passcode) {
-                verifyAccess(true);
+                verifyAccess();
             }
         });
 
-        async function login() {
-            const inputEl = document.getElementById('passcode-input');
-            const submitBtn = document.getElementById('login-submit-btn');
-            const errorEl = document.getElementById('login-error');
-            const logEl = document.getElementById('login-status-log');
-            
-            const inputVal = inputEl ? inputEl.value.trim() : '';
-            if (!inputVal) {
-                if (errorEl) {
-                    errorEl.innerText = "Please enter a passcode.";
-                    errorEl.classList.remove('hidden');
-                    errorEl.style.display = 'block';
-                }
-                return;
-            }
-
-            passcode = inputVal;
-            if (errorEl) {
-                errorEl.classList.add('hidden');
-                errorEl.style.display = 'none';
-            }
-            if (logEl) {
-                logEl.innerText = `Connecting to server with passcode "${inputVal}"...`;
-                logEl.classList.remove('hidden');
-                logEl.style.display = 'block';
-            }
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerText = "Verifying...";
-            }
-
-            try {
-                await verifyAccess(false);
-            } catch (e) {
-                console.error('Login error:', e);
-                if (logEl) logEl.innerText = `Login Error: ${e.message}`;
-            } finally {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerText = "Access Dashboard";
-                }
+        function login() {
+            const inputVal = document.getElementById('passcode-input').value.trim();
+            if (inputVal) {
+                passcode = inputVal;
+                verifyAccess();
             }
         }
 
         function logout() {
             localStorage.removeItem('admin_passcode');
-            passcode = '';
             const url = new URL(window.location.href);
             url.searchParams.delete('passcode');
             window.history.replaceState({}, '', url.pathname);
@@ -1026,67 +927,26 @@
             }
             
             clearInterval(updateInterval);
-            const passView = document.getElementById('passcode-view');
-            const adminView = document.getElementById('admin-view');
-            if (passView) { passView.classList.remove('hidden'); passView.style.display = 'block'; }
-            if (adminView) { adminView.classList.add('hidden'); adminView.style.display = 'none'; }
-            
-            const errEl = document.getElementById('login-error');
-            const logEl = document.getElementById('login-status-log');
-            if (errEl) errEl.classList.add('hidden');
-            if (logEl) logEl.classList.add('hidden');
-            document.getElementById('passcode-input').value = '';
+            document.getElementById('admin-view').classList.add('hidden');
+            document.getElementById('passcode-view').classList.remove('hidden');
         }
 
-        async function verifyAccess(isInitialLoad = false) {
-            const logEl = document.getElementById('login-status-log');
+        async function verifyAccess() {
             try {
-                if (logEl && !isInitialLoad) logEl.innerText = `Sending POST /api/admin/verify...`;
-                
-                const response = await fetch('/api/admin/verify', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-passcode': passcode
-                    },
-                    body: JSON.stringify({ passcode })
-                });
-
+                const response = await fetch(`/api/admin/queue?passcode=${encodeURIComponent(passcode)}`);
                 if (response.status === 401) {
-                    passcode = '';
                     localStorage.removeItem('admin_passcode');
-                    const errEl = document.getElementById('login-error');
-                    if (errEl) {
-                        if (!isInitialLoad) {
-                            errEl.innerText = "Incorrect Passcode. Please try again.";
-                            errEl.classList.remove('hidden');
-                            errEl.style.display = 'block';
-                        } else {
-                            errEl.classList.add('hidden');
-                            errEl.style.display = 'none';
-                        }
-                    }
-                    if (logEl && !isInitialLoad) logEl.innerText = `Server returned 401 Unauthorized`;
-                    
-                    const passView = document.getElementById('passcode-view');
-                    const adminView = document.getElementById('admin-view');
-                    if (passView) { passView.classList.remove('hidden'); passView.style.display = 'block'; }
-                    if (adminView) { adminView.classList.add('hidden'); adminView.style.display = 'none'; }
+                    document.getElementById('login-error').classList.remove('hidden');
+                    document.getElementById('passcode-view').classList.remove('hidden');
+                    document.getElementById('admin-view').classList.add('hidden');
                     return;
                 }
+                if (!response.ok) throw new Error('Request failed');
                 
-                if (!response.ok) throw new Error('Server returned HTTP ' + response.status);
-                
-                if (logEl) logEl.innerText = `Success (HTTP 200)! Opening dashboard...`;
                 localStorage.setItem('admin_passcode', passcode);
-                
-                const inputEl = document.getElementById('passcode-input');
-                if (inputEl) inputEl.blur();
-                
-                const passView = document.getElementById('passcode-view');
-                const adminView = document.getElementById('admin-view');
-                if (passView) { passView.classList.add('hidden'); passView.style.display = 'none'; }
-                if (adminView) { adminView.classList.remove('hidden'); adminView.style.display = 'block'; }
+                document.getElementById('passcode-view').classList.hidden = true;
+                document.getElementById('passcode-view').classList.add('hidden');
+                document.getElementById('admin-view').classList.remove('hidden');
                 
                 const url = new URL(window.location.href);
                 if (url.searchParams.has('passcode')) {
@@ -1100,39 +960,22 @@
 
             } catch (err) {
                 console.error('Verify error:', err);
-                if (logEl) logEl.innerText = `Network Error: ${err.message}`;
+                alert('Connection error when validating dashboard access.');
             }
         }
 
         async function loadData() {
             try {
-                const response = await fetch(`/api/admin/queue?passcode=${encodeURIComponent(passcode)}`, {
-                    headers: { 'x-passcode': passcode }
-                });
+                const response = await fetch(`/api/admin/queue?passcode=${encodeURIComponent(passcode)}`);
                 if (response.status === 401) return logout();
-                if (!response.ok) throw new Error('Failed to load queue');
                 const data = await response.json();
                 
-                const filterDateEl = document.getElementById('filter-date');
-                const selectedDate = filterDateEl ? filterDateEl.value : new Date().toLocaleDateString('en-CA');
+                const selectedDate = document.getElementById('filter-date').value;
                 
-                let filtered = (data.queue || []).filter(ticket => {
+                queueData = data.queue.filter(ticket => {
                     const ticketDate = ticket.date || new Date(ticket.timestamp).toLocaleDateString('en-CA');
                     return ticketDate === selectedDate;
                 });
-
-                // Smart Fallback: If current selected date has 0 tickets, but database has tickets, auto-select the date of the active/latest tickets
-                if (filtered.length === 0 && data.queue && data.queue.length > 0) {
-                    const latestTicket = data.queue.find(t => t.status === 'called' || t.status === 'waiting') || data.queue[data.queue.length - 1];
-                    const latestDate = latestTicket.date || new Date(latestTicket.timestamp).toLocaleDateString('en-CA');
-                    if (filterDateEl) filterDateEl.value = latestDate;
-                    filtered = data.queue.filter(ticket => {
-                        const ticketDate = ticket.date || new Date(ticket.timestamp).toLocaleDateString('en-CA');
-                        return ticketDate === latestDate;
-                    });
-                }
-
-                queueData = filtered;
                 
                 if (data.location && data.location.active) {
                     if (!locationActive && !watchId) {
@@ -1528,8 +1371,6 @@
             toggleBtn.disabled = true;
             statusText.innerText = "Requesting GPS permissions...";
 
-            await requestWakeLock();
-
             sendLocationToServer(null, null, true, trackingTicketId);
 
             // ponytail: high accuracy location tracking using native browser geolocation
@@ -1580,8 +1421,6 @@
                 navigator.geolocation.clearWatch(watchId);
                 watchId = null;
             }
-
-            releaseWakeLock();
 
             trackingTicketId = null;
             locationActive = false;
