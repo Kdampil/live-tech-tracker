@@ -781,7 +781,7 @@
         <p class="subtitle" style="margin-bottom: 20px;">Enter administrative passcode to manage queue</p>
         <form class="card no-ticket-form" id="passcode-form" onsubmit="event.preventDefault(); login();" style="display: flex; flex-direction: column; gap: 12px;">
             <div style="position: relative; width: 100%; display: flex; align-items: center;">
-                <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width: 100%; padding-right: 74px;" />
+                <input type="text" id="passcode-input" placeholder="Passcode" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width: 100%; padding-right: 74px; -webkit-text-security: disc;" />
                 <button type="button" id="toggle-pw-btn" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.08); border: 1px solid var(--panel-border); border-radius: 6px; padding: 6px 12px; font-size: 0.8rem; font-weight: 600; color: var(--text-primary); cursor: pointer; user-select: none; z-index: 10; min-height: 32px; box-shadow: none; touch-action: manipulation;">Show</button>
             </div>
             <button type="submit" id="login-submit-btn" style="touch-action: manipulation;">Access Dashboard</button>
@@ -943,15 +943,12 @@
                         e.preventDefault();
                         e.stopPropagation();
                     }
-                    const isPassword = passcodeInp.type === 'password' || passcodeInp.style.webkitTextSecurity === 'disc';
-                    if (isPassword) {
-                        passcodeInp.type = 'text';
-                        passcodeInp.style.webkitTextSecurity = 'none';
-                        toggleBtn.innerText = 'Hide';
-                    } else {
-                        passcodeInp.type = 'password';
+                    if (passcodeInp.style.webkitTextSecurity === 'none') {
                         passcodeInp.style.webkitTextSecurity = 'disc';
                         toggleBtn.innerText = 'Show';
+                    } else {
+                        passcodeInp.style.webkitTextSecurity = 'none';
+                        toggleBtn.innerText = 'Hide';
                     }
                 };
                 toggleBtn.addEventListener('click', handleToggle);
