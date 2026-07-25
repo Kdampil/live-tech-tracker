@@ -270,6 +270,65 @@
         .hidden {
             display: none !important;
         }
+
+        /* iPhone 15 (393px x 852px) Mobile-First Responsive Overrides */
+        @media screen and (max-width: 480px) {
+            body {
+                padding: max(12px, env(safe-area-inset-top, 12px)) 
+                         max(10px, env(safe-area-inset-right, 10px)) 
+                         max(16px, env(safe-area-inset-bottom, 16px)) 
+                         max(10px, env(safe-area-inset-left, 10px)) !important;
+                align-items: flex-start;
+            }
+
+            .container {
+                padding: 16px 12px !important;
+                border-radius: 16px !important;
+                max-width: 100% !important;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+                margin-bottom: 4px;
+            }
+
+            .subtitle {
+                font-size: 0.85rem;
+                margin-bottom: 20px;
+            }
+
+            .card {
+                padding: 14px 12px !important;
+                margin-bottom: 14px !important;
+                border-radius: 12px !important;
+            }
+
+            .number-circle {
+                width: 110px !important;
+                height: 110px !important;
+                font-size: 3rem !important;
+                margin: 8px auto 12px auto !important;
+                border-radius: 24px !important;
+            }
+
+            #map {
+                height: 200px !important;
+                border-radius: 12px !important;
+            }
+
+            input, button {
+                padding: 12px;
+                font-size: 0.95rem;
+                border-radius: 8px;
+            }
+
+            .info-row {
+                flex-direction: column;
+                gap: 6px;
+                align-items: center;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
