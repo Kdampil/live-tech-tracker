@@ -10,7 +10,7 @@ const { Pool } = require('pg');
 // ponytail: server persistent state controller
 
 const DATA_FILE = path.join(__dirname, 'data.json');
-const PASSCODE = process.env.PASSCODE || 'admin123';
+const PASSCODE = (process.env.PASSCODE || 'admin123').trim();
 
 let state = {
   queue: [],
@@ -82,7 +82,7 @@ loadState().then(() => {
 
 // Admin passcode middleware
 function requireAdmin(req, res, next) {
-  const passcode = req.query.passcode || req.headers['x-passcode'];
+  const passcode = (req.query.passcode || req.headers['x-passcode'] || '').trim();
   if (passcode !== PASSCODE) {
     return res.status(401).json({ error: 'Unauthorized: invalid passcode' });
   }
